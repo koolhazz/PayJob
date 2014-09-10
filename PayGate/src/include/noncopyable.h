@@ -1,18 +1,11 @@
 #ifndef __QZ_COMMON_NONCOPYABLE_H__
 #define __QZ_COMMON_NONCOPYABLE_H__
 
-class noncopyable
-{
+class noncopyable {
 protected:
-    noncopyable (void)
-    {
+    noncopyable (void) {}
 
-    }
-
-    ~noncopyable (void)
-    {
-
-    }
+    ~noncopyable (void) {}
 
 private:  // emphasize the following members are private
     noncopyable (const noncopyable&);

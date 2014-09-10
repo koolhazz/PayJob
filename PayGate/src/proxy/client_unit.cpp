@@ -303,15 +303,12 @@ TDecodeStatus CClientUnit::proc_pkg () // recv
 	while(_r.data_len() > 0)
 	{
 		g_pDebugLog->logMsg("CCCCCCCCCCCC");
-		int inputRet = HandleInput(_r.data(), _r.data_len());
+		int inputRet = HandleInput(_r.data(), _r.data_len()); /* 合法性检查 */
 		g_pDebugLog->logMsg("DDDDDDDDDDDDDD  [%d]",inputRet);
-		if(inputRet < 0)
-		{
+		if(inputRet < 0) {
 			_decodeStatus = DECODE_FATAL_ERROR;
 			return _decodeStatus;
-		}
-		else if(inputRet == 0)
-		{
+		} else if(inputRet == 0) {
 			_decodeStatus = DECODE_WAIT_CONTENT;
 			return _decodeStatus;
 		}
@@ -330,36 +327,33 @@ TDecodeStatus CClientUnit::proc_pkg () // recv
 }
 
 int 
-CClientUnit::HandleInput(const char* data,  int len)
+CClientUnit::HandleInput(const char* data,  int len) /* 数据包合法性检查 */
 {
-	int headLen = sizeof(struct TPkgHeader);
+	int headLen, pkgLen;
+	
+	headLen = sizeof(struct TPkgHeader);
 	g_pDebugLog->logMsg("ffffffffffff  [%d]",headLen);  
 	g_pDebugLog->logMsg("ggggggggg  [%d]",len);
-	if(len < headLen)
-	{
+	if(len < headLen) {
 		g_pDebugLog->logMsg("hhhhhhh  [%d]",len);
 		return 0;
 	}
 	
 	TPkgHeader *pHeader = (struct TPkgHeader*)data;
-	if(pHeader->flag[0]!='B' || pHeader->flag[1]!='Y')
-	{
+	if(pHeader->flag[0]!='B' || pHeader->flag[1]!='Y') {
 		g_pErrorLog->logMsg("%s||Invalid packet, uid:[%d]", __FUNCTION__, _uid);
 		return -1;
 	}
 	
-	int pkglen = sizeof(short) + ntohs(pHeader->length);//×ª»»³É´ó¶Ë
+	pkglen = sizeof(short) + ntohs(pHeader->length);//×ª»»³É´ó¶Ë
 	g_pErrorLog->logMsg("client packet body length:[%d], cmd:[%d]", ntohs(pHeader->length), ntohs(pHeader->cmd));
-	if(pkglen<0 || pkglen>8*1000)
-	{
+	if(pkglen < 0 || pkglen > 8*1000) {
 		g_pErrorLog->logMsg("%s||Invalid packet, uid:[%d], pkglen:[%d]", __FUNCTION__, _uid, pkglen);
 		return -1;
 	}
 
-	if(len < pkglen)
-	{
-		return 0;
-	}
+	if(len < pkglen) return 0; /* 接收到数据包头数据，但是包还没有接受完整 */
+
 	return pkglen;
 }
 
@@ -374,7 +368,8 @@ bool CClientUnit::CheckCmd(int cmd)
 	return false;
 }
 
-int CClientUnit::HandleInputBuf(const char *pData, int len)
+int 
+CClientUnit::HandleInputBuf(const char *pData, int len)
 {
 	NETInputPacket 	reqPacket;
 	int 			cmd = 0, ret = 0;
@@ -383,7 +378,6 @@ int CClientUnit::HandleInputBuf(const char *pData, int len)
 
 	reqPacket.Copy(pData, len);
 	cmd = reqPacket.GetCmdType();
-
 
 	g_pErrorLog->logMsg("%s||HandleInputBuf cmd:[0x%x]",__FUNCTION__, cmd);
 	if(TGlobal::_debugLogSwitch && _uid > 0) {
@@ -401,7 +395,7 @@ int CClientUnit::HandleInputBuf(const char *pData, int len)
 			break;
 	}
 
-	return ret;
+	return ret; /* 结束 */
 
 	if(cmd == CLIENT_COMMAND_BREAK_TIME) {
 		NETOutputPacket resPacket;
@@ -1262,13 +1256,17 @@ CClientUnit::client_cmd_req_handler(NETInputPacket* pack)
 		out.End();
 
 		/* 获取后台helper，并发送 */
-		h = this->get_job_worker();
+		h = this->_get_job_worker();
 
 		if (h) {
 			h->append_pkg(out.packet_buf(), out.packet_size());
 			ret = h->send_to_logic(_decoderunit->get_helper_timer());
+		} else {
+			g_pErrorLog("JobWorker Not Found.");
+			return -1;
 		}
 	} else {
+		g_pErrorLog("ReqMsg Parsed Failed.");
 		ret = -1;
 	}
 

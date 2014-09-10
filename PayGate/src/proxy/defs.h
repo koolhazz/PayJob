@@ -7,8 +7,7 @@
 
 #define MAX_WEB_RECV_LEN            102400
 #define MAX_ACCEPT_COUNT            256
-enum CConnState
-{
+enum CConnState {
     CONN_IDLE,
     CONN_FATAL_ERROR,
     CONN_DATA_ERROR,
@@ -23,8 +22,7 @@ enum CConnState
     CONN_APPEND_DONE
 };
 
-enum TDecodeStatus
-{
+enum TDecodeStatus {
     DECODE_FATAL_ERROR,
     DECODE_DATA_ERROR,
     DECODE_WAIT_HEAD,
@@ -35,8 +33,7 @@ enum TDecodeStatus
     DECODE_DISCONNECT_BY_USER
 };
 
-typedef struct tagRspList
-{
+typedef struct tagRspList {
     char*   _buffer;
     int     _len;
     int     _sent;
@@ -44,16 +41,14 @@ typedef struct tagRspList
 
     struct tagRspList* _next;
 
-}TRspList;
+} TRspList;
 
-enum
-{
+enum {
 	CLIENT_CMD_SYC = 0x0002,
 	SERVER_CMD_SYC = 0x0001
 };
 
-enum ConnType
-{
+enum ConnType {
 	CONN_CLINET,
 	CONN_OTHER
 };
@@ -105,27 +100,35 @@ const int SERVER_BROADCAST_INFO_NEW = 0x7054;//�µĹ㲥Э��
 const int CLINET_REQUEST_BROADCAST_INFO = 0x7055; //�����ն����͵Ĺ㲥
 
 #ifndef CONST_T
-#define CONST_T(T, V, v) (const T V = v)
-#define CMD(V, v) CONST_T(int, V, v)
+#define CONST_T(T, V, v, b) (const T V = v + b)
+#define CMD(V, v, b) CONST_T(int, V, v, b)
 #else
 #undef CONST_T
 #undef CMD
-#define CONST_T(T, V, v) (const T V = v)   m 
-#define CMD(V, v) CONST_T(int, V, v)
+#define CONST_T(T, V, v, b) (const T V = v + b)
+#define CMD(V, v, b) CONST_T(int, V, v, b)
 #endif
 
 #ifndef UNUSED
 #define UNUSED(v) (void)(v)
 #endif
 
-CMD(CLIENT_CMD_REQ, 0x0001);			/* 支付请求 */
-CMD(SERVER_CMD_REP, 0x1001);			/* 支付响应 */
+#define CLIENT_BASE 	0x0
+#define SERVER_BASE 	0x1000
+#define INTER_REQ_BASE	0x8000
+#define INTER_RES_BASE	0x9000
 
-CMD(INTER_CMD_REQ, 0x8001);				/* 内部支付请求 */
-CMD(INTER_CMD_RES, 0x9001);				/* 内部支付响应 */
+CMD(CLIENT_CMD_REQ, 0x1, CLIENT_BASE);					/* 支付请求 */
+CMD(SERVER_CMD_REP, 0x1, SERVER_BASE);					/* 支付响应 */
 
-CMD(INTER_CMD_QUEUE_STAT_REQ, 0x8002)   /* 队列状态请求 */
-CMD(INTER_CMD_QUEUE_STAT_RES, 0x9002)   /* 队列状态响应 */
+CMD(INTER_CMD_REQ, 0x1, INTER_REQ_BASE);				/* 内部支付请求 */
+CMD(INTER_CMD_RES, 0x1, INTER_RES_BASE);				/* 内部支付响应 */
+
+CMD(INTER_CMD_WAITER_STAT_REQ, 0x2, INTER_REQ_BASE);   	/* Waiter队列状态请求 */
+CMD(INTER_CMD_WAITER_STAT_RES, 0x2, INTER_RES_BASE);  	/* Waiter队列状态响应 */
+
+CMD(INTER_CMD_NOTIFY_STAT_REQ, 0x3, INTER_REQ_BASE);	/* Notify队列状态请求 */	
+CMD(INTER_CMD_NOTIFY_STAT_RES, 0x3, INTER_RES_BASE);	/* Notify队列状态响应 */
 
 enum {
 	JobWorkerType = 1,

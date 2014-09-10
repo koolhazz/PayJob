@@ -20,7 +20,9 @@ extern CMemPool*	_helpMp;
 
 HTTP_SVR_NS_BEGIN
 class TPkgHeader;
-class CHelperUnit : public CPollerObject,	private CTimerObject, private noncopyable
+class CHelperUnit : public CPollerObject,	
+					private CTimerObject, 
+					private noncopyable
 {
 public: //method
 	CHelperUnit(CPollerUnit* unit);
@@ -49,6 +51,10 @@ private:
 	string IpMap(string& ip);
 
 	CClientUnit* GetClientUintByUid(const int &uid, CDecoderUnit **pDecoder);
+
+	int waiter_do(NETInputPacket* pack); /* Waiter完成任务 */
+	int notify_do(NETInputPacket* pack); /* Notify完成任务 */
+
 public:
 	std::string addr;
 	int			port;
