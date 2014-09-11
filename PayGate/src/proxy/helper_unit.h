@@ -52,8 +52,8 @@ private:
 
 	CClientUnit* GetClientUintByUid(const int &uid, CDecoderUnit **pDecoder);
 
-	int waiter_do(NETInputPacket* pack); /* Waiter完成任务 */
-	int notify_do(NETInputPacket* pack); /* Notify完成任务 */
+	int _worker_stat_chk(NETInputPacket* pack); 	/* Notify完成任务 */
+	int _pay_res(NETInputPacket* pack); 	/* 返回支付请求结果 */
 
 public:
 	std::string addr;

@@ -135,5 +135,23 @@ enum {
 	NotifyWorkerType
 };
 
+typedef struct server_stat_s server_stat_t;
+struct server_stat_s {
+	unsigned int _w_qlen; /* length of waiter's queue */
+	unsigned int _n_qlen; /* length of notify's queue */
+	unsigned int _w_ctime;
+	unsigned int _n_ctime;
+};
+
+typedef struct server_switch_s server_switch_t;
+struct server_switch_s {
+	bool _w_is_busyed;
+	bool _n_is_busyed;
+};
+
+CONST_T(int, SVR_MAX_W_QLEN, 1024, 0);
+CONST_T(int, SRV_MAX_N_QLEN, 1024, 0);
+
+
 #endif
 

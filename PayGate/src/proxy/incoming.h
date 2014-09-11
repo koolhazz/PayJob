@@ -10,8 +10,7 @@
 HTTP_SVR_NS_BEGIN
 
 class CListener;
-class CIncoming : private noncopyable
-{
+class CIncoming : private noncopyable {
 public: //method
     CIncoming (void);
     virtual ~CIncoming (void);

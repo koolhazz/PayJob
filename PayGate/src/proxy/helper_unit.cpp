@@ -26,6 +26,7 @@
 #include "ICHAT_PacketBase.h"
 #include "EncryptDecrypt.h"
 #include "watchdog.h"
+#include "Json/json.h"
 extern Watchdog *LogFile;
 
 #include "clib_log.h"
@@ -34,6 +35,8 @@ extern clib_log* g_pErrorLog;
 
 HTTP_SVR_NS_BEGIN
 extern CHelperPool* _helperpool;
+
+using namespace Json;
 
 class TPkgHeader;
 class CClientUnit; 
@@ -240,8 +243,7 @@ int CHelperUnit::InputNotify (void)
 {
 	update_timer();
 	int ret = recv_from_cgi();
-	if (ret < 0)
-	{
+	if (ret < 0) {
 		log_error("call recv failed, helper client netfd[%d]", netfd); 
 		reset_helper();
 		return POLLER_COMPLETE;
@@ -405,20 +407,30 @@ int CHelperUnit::process_pkg(void)
 			return -1;
 		}
 		int pkglen = sizeof(short) + contenLen;
-		if (totalLen < pkglen)
-			 break;
+		if (totalLen < pkglen) break;
+
 		NETInputPacket tranPacket;
 		tranPacket.Copy(_r.data(), pkglen);
 		int nCmd = tranPacket.GetCmdType();
-		int uid = tranPacket.ReadInt();
-		int svid = tranPacket.ReadInt();
-		log_error("nCmd:[0x%x]", nCmd);
-		log_error("uid:[%d]", uid);
-		log_error("svid:[%d]", svid);
+		//int uid = tranPacket.ReadInt();
+		//int svid = tranPacket.ReadInt();
 
 		if(_helperpool == NULL) {
 			log_error("_helperpool is null");
 		} else {
+			switch (nCmd) {
+				case INTER_CMD_RES:
+					_pay_res(&tranPacket);
+					break;
+				case INTER_CMD_WAITER_STAT_RES:
+				case INTER_CMD_NOTIFY_STAT_RES:
+					_worker_stat_chk(&tranPacket);
+					break;
+				default:
+					log_error("cmd is invalied.");
+					break;
+			}
+
 			if(CLIENT_PACKET == nCmd) {
 				char szTemp[10240];
 				int rLen = tranPacket.ReadBinary(szTemp, sizeof(szTemp));
@@ -581,5 +593,100 @@ CClientUnit* CHelperUnit::GetClientUintByUid(const int &uid, CDecoderUnit **pDec
 	}
 	return clt;
 }
+
+CClientUnit*
+CHelpUnit::_get_client_by_id(const unsigned int& flow, CDecoderUnit** ppDecoder)
+{
+	CClientUnit *clt = NULL;
+
+	std::map<unsigned int, CDecoderUnit*>::iterator iter = _helperpool->m_objmap.find(flow);
+	if( iter != _helperpool->m_objmap.end()) {
+		(*ppDecoder) = iter->second;
+		if(*ppDecoder != NULL) {
+			clt = (*ppDecoder)->get_web_unit();
+		}
+	}
+
+	return clt;
+}
+
+int
+CHelpUnit::_pay_res(NETInputPacket* pack)
+{
+	int 			ret = 0;
+	string 			json, result;
+	Reader			r;
+	Value			v;
+	unsigned int 	flow;
+	CClientUnit		*c;
+	CDecoderUnit	*d;
+	NETOutputPacket	out;	
+
+	json = pack->ReadString();
+
+	if (r.parse(json, v)) {
+		flow = v["flow"].asUInt();
+		result = v["result"].asString();
+
+		out.Begin(SERVER_CMD_REQ);
+		out.WriteInt(0);
+		out.WriteString(result);
+		out.End();
+	} else { /* error handle */
+		out.Begin(SERVER_CMD_REQ);
+		out.WriteInt(1);
+		out.WriteString("");
+		out.End();
+
+		ret = -1;
+	}
+
+	c = _get_client_by_id(flow, &d);
+
+	if (c && c->get_stat() != CONN_FATAL_ERROR) {
+		c->add_rsp_buf(out.packet_buf(), out.packet_size());
+		ret = c->send();
+	}
+
+	return ret;
+}
+
+int 
+CHelpUnit::_worker_stat_chk(NETInputPacket* pack)
+{
+	int 			cmd;
+	unsigned int 	len;
+	unsigned int	ctime;
+	  
+	cmd = pack->GetCmdType();
+	len = pack->ReadInt();
+	ctime = pack->ReadInt();
+
+	switch (cmd) {
+		case INTER_CMD_WAITER_STAT_RES:
+			gSvrSwitch->_w_is_busyed = len > SVR_MAX_W_QLEN ? true : false;
+			gSvrStat->_w_qlen = len;
+			gSvrStat->_w_ctime = ctime;
+			break;
+		case INTER_CMD_NOTIFY_STAT_RES:
+			gSvrSwitch->_n_is_busyed = len > SVR_MAX_N_QLEN ? true : false;
+			gSvrStat->_n_qlen = len;
+			gSvrStat->_n_ctime = ctime;
+			break;
+		default:
+			break;
+	}
+
+	g_pDebugLog->logMsg("--------Server_Stat begin--------");
+	g_pDebugLog->logMsg("_w_qlen:  %d", gSvrStat->_w_qlen);
+	g_pDebugLog->logMsg("_w_ctime: %d", gSvrStat->_w_ctime);
+	g_pDebugLog->logMsg("_n_qlen:  %d", gSvrStat->_n_qlen);
+	g_pDebugLog->logMsg("_w_ctime: %d", gSvrStat->_n_ctime);
+	g_pDebugLog->logMsg("_w_is_busyed: %s", gSvrStat->_w_is_busyed ? "true" : "false");
+	g_pDebugLog->logMsg("_n_is_busyed: %s", gSvrStat->_n_is_busyed ? "true" : "false");
+	g_pDebugLog->logMsg("--------Server_Stat end--------");
+
+}
+
 HTTP_SVR_NS_END
 

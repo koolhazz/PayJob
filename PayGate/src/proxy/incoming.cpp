@@ -26,6 +26,7 @@ HTTP_SVR_NS_BEGIN
 extern CHelperPool*			_helperpool;
 extern CRealTimer* 			_RealTimer;
 extern CLevelCountTimer*	_LevelCountTimer;
+extern server_stat_t		*gSvrStat;
 
 CIncoming::CIncoming (void) :
 _pollerunit (NULL),

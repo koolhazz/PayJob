@@ -17,8 +17,8 @@ using namespace comm::sockcommu;
 MODULE_INSTANCE_EXPORT(__http_svr_ns__::CProxyModule, qzhttp_proxy, 2_0_0)
 MODULE_DESTROY_EXPORT(__http_svr_ns__::CProxyModule, qzhttp_proxy, 2_0_0)
 
-CMemPool*				_webMp;
-CMemPool*				_helpMp;
+CMemPool* _webMp;
+CMemPool* _helpMp;
 
 clib_log* g_pErrorLog;
 clib_log* g_pDebugLog;
@@ -29,8 +29,10 @@ Watchdog *LogFile = NULL;
 
 HTTP_SVR_NS_BEGIN
 
-CHelperPool* _helperpool;
-CRealTimer* _RealTimer;//定时上报定时器
+CHelperPool* 	_helperpool;
+CRealTimer* 	_RealTimer;//定时上报定时
+server_stat_t	*gSvrStat;
+server_switch_t	*gSvrSwitch;
 
 CLevelCountTimer*	_LevelCountTimer;	//获取场次人数的定时器
 
@@ -56,6 +58,8 @@ int CProxyModule::open (int argc, char** argv)
 	_LevelCountTimer = new CLevelCountTimer();
 	assert(_LevelCountTimer != NULL);
 
+	gSvrStat = new server_stat_t;
+	assert(gSvrStat != NULL);
 
     if(TGlobal::DaemonInit("../conf/config.xml") < 0)
 		return -1;
