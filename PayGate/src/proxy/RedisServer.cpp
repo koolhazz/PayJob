@@ -1,5 +1,5 @@
 #include "RedisServer.h"
-#include "json.h"
+#include "Json/json.h"
 
 
 CRedisServer::CRedisServer()
@@ -122,6 +122,7 @@ int CRedisServer::SetInfo(string ip,int port,int sid)
 	//	value = m_pRedisReply->str;
 		freeReplyObject(m_pRedisReply);
 	}
-
+	
+	return 0;
 }
 

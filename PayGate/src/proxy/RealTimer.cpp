@@ -1,3 +1,12 @@
+#include "CHelper_pool.h"
+#include "watchdog.h"
+#include "client_unit.h"
+#include "decode_unit.h"
+#include "mempool.h"
+#include "RealTimer.h"
+#include "clib_log.h"
+#include "helper_unit.h"
+#include "log.h"
 
 
 #include <stdio.h>
@@ -8,33 +17,26 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include <client_unit.h>
-#include <decode_unit.h>
+#include <defs.h>
 #include <memcheck.h>
-#include <log.h>
 #include <sys/types.h>
 #include <iomanip>
 #include <fstream>
 #include <ctime>
 #include <iostream>
 #include <cache.h>
-#include "mempool.h"
 #include <iomanip>
 #include <fstream>
 #include <ctime>
 #include <iostream>
-#include <helper_unit.h>
-#include <memcheck.h>
-#include <CHelper_pool.h>
 #include <sstream>
-#include <defs.h>
 #include <MarkupSTL.h>
-#include "RealTimer.h"
-#include "clib_log.h"
+
+
 extern clib_log* g_pDebugLog;
 extern clib_log* g_pErrorLog;
-#include "CHelper_pool.h"
-#include "watchdog.h"
+
+
 extern Watchdog *LogFile; 
 
 HTTP_SVR_NS_BEGIN

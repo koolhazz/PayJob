@@ -3,7 +3,7 @@ include ./Make.conf
 COMPILE_LIB_HOME=../../bin
 RUN_LIB_HOME=../../lib
       
-INC 	    = -I. -I$(CORE_HOME) -I ./Json
+INC 	    = -I. -I$(CORE_HOME) 
 LINK	    = -lpthread -L$(RUN_LIB_HOME) -Wl,-rpath=$(RUN_LIB_HOME) -lcore -lz  -z defs  /home/AustinChen/lib/libhiredis.a 
 OPT         = -pipe -fno-ident -fPIC -O2
 
@@ -28,13 +28,13 @@ SRCS	= proxy_module.cpp \
 		  CHelper_pool.cpp\
           EncryptDecrypt.cpp\
           game_unit.cpp\
-	  RedisServer.cpp\
-	  ./Json/json_writer.cpp\
-	  ./Json/json_reader.cpp\
-	  ./Json/json_value.cpp\
-	  clib_log.cpp	\
-	  watchdog.cpp	\
-	  RealTimer.cpp
+	      ../include/Json/json_writer.cpp\
+	      ../include/Json/json_reader.cpp\
+		  ../include/Json/json_value.cpp\
+	      RedisServer.cpp\
+	      clib_log.cpp	\
+	      watchdog.cpp	\
+	      RealTimer.cpp
 	  
 BIN_NAME = PayGate
 BIN	= $(COMPILE_LIB_HOME)/$(BIN_NAME)

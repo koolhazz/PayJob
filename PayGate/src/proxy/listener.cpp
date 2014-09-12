@@ -28,9 +28,9 @@ _webtimerlist (NULL),
 _helpertimerlist (NULL),
 _accept_cnt (acceptcnt),
 _newfd_cnt (0),
-_flag (0),
 _fd_array (NULL),
-_peer_array(NULL)
+_peer_array(NULL),
+_flag (0)
 {
     strncpy (_bindAddr, bindIp, sizeof(_bindAddr) - 1);
     _bindPort = port;

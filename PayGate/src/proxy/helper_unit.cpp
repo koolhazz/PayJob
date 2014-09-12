@@ -27,14 +27,18 @@
 #include "EncryptDecrypt.h"
 #include "watchdog.h"
 #include "Json/json.h"
+#include "defs.h"
+#include "clib_log.h"
+
 extern Watchdog *LogFile;
 
-#include "clib_log.h"
 extern clib_log* g_pDebugLog;
 extern clib_log* g_pErrorLog;
 
 HTTP_SVR_NS_BEGIN
-extern CHelperPool* _helperpool;
+extern CHelperPool		*_helperpool;
+extern server_stat_t 	*gSvrStat;
+extern server_switch_t 	*gSvrSwitch;
 
 using namespace Json;
 
@@ -380,7 +384,7 @@ int CHelperUnit::ProcessGetNewRoom(CDecoderUnit* pDecoder, NETInputPacket* pPack
 
 int CHelperUnit::process_pkg(void)
 {
-	int headLen = 0, totalLen = 0;
+	int headLen = 0, totalLen = 0, pkglen = 0;
 
 	g_pDebugLog->logMsg("--------------- CHelperUnit::process_pkg begin --------------");
 
@@ -406,14 +410,13 @@ int CHelperUnit::process_pkg(void)
 		{
 			return -1;
 		}
-		int pkglen = sizeof(short) + contenLen;
+
+		pkglen = sizeof(short) + contenLen;
 		if (totalLen < pkglen) break;
 
 		NETInputPacket tranPacket;
 		tranPacket.Copy(_r.data(), pkglen);
 		int nCmd = tranPacket.GetCmdType();
-		//int uid = tranPacket.ReadInt();
-		//int svid = tranPacket.ReadInt();
 
 		if(_helperpool == NULL) {
 			log_error("_helperpool is null");
@@ -421,99 +424,21 @@ int CHelperUnit::process_pkg(void)
 			switch (nCmd) {
 				case INTER_CMD_RES:
 					_pay_res(&tranPacket);
+					_r.skip(pkglen); /* cache 中可能有多个包需要设置index */
+					totalLen -= pkglen;
 					break;
 				case INTER_CMD_WAITER_STAT_RES:
 				case INTER_CMD_NOTIFY_STAT_RES:
 					_worker_stat_chk(&tranPacket);
+					_r.skip(pkglen);
+					totalLen -= pkglen;
 					break;
 				default:
 					log_error("cmd is invalied.");
 					break;
 			}
-
-			if(CLIENT_PACKET == nCmd) {
-				char szTemp[10240];
-				int rLen = tranPacket.ReadBinary(szTemp, sizeof(szTemp));
-				g_pDebugLog->logMsg("rLen:[%d]", rLen);
-				NETInputPacket tempPacket;
-				int cmd = 0;
-				if(rLen != -1)
-				{
-					tempPacket.Copy(szTemp, rLen);
-					cmd = tempPacket.GetCmdType();
-				}
-				else
-				{
-					log_error("Helper ReadBinary error");
-					return -1;	
-				}
-				g_pDebugLog->logMsg("cmd:[0x%x]", cmd);
-				if( cmd == CMD_GET_ROOM_LEVER_NUM)
-				{
-					ProcessGetLevelCount(&tempPacket);
-					_r.skip(pkglen);
-					totalLen -= pkglen;
-					continue;
-				} 
-			
-				CDecoderUnit *_decoder = NULL;
-				CClientUnit* clt = GetClientUintByUid(uid, &_decoder);
-				if( NULL == clt || _decoder == NULL)
-				{
-					SendClientClose(uid);
-				}
-				else
-				{
-					if(TGlobal::_debugLogSwitch && clt->get_uid()>0)
-					{
-						g_pDebugLog->logMsg("%s|0x%x|%d|%d", __FUNCTION__, cmd, clt->get_uid(), clt->_api);
-					}
-					
-					if(cmd == SERVER_CMD_LOGIN_SUCCESS)
-					{	
-						ProcessUserLoginSuccess(_decoder, &tempPacket);
-					}
-					else if(cmd == SERVER_CMD_ENTER_ROOM)
-					{
-						ProcessEnterRoom(_decoder, &tempPacket);
-					}
-					else if(cmd == CMD_GET_NEW_ROOM)
-					{
-						ProcessGetNewRoom(_decoder, &tempPacket);
-					}
-
-					if(clt->get_state() != CONN_FATAL_ERROR)
-					{
-						clt->add_rsp_buf(szTemp, rLen);
-						clt->send();
-					}
-					else
-					{
-						_decoder->complete();
-					}
-				}
-				
-			}
-			else if(nCmd == SERVER_CLOSE_PACKET)
-			{
-				CDecoderUnit *_decoder = NULL;
-				CClientUnit* clt = GetClientUintByUid(uid, &_decoder);
-				if( _decoder != NULL)
-				{
-					_decoder->set_conn_type(CONN_OTHER);
-					_decoder->complete();
-				}
-			}
-			else
-			{
-				log_error("helper invalid cmd");
-			}
-			log_error("processing a packet completed");		
-		}	
-		_r.skip(pkglen);
-		totalLen -= pkglen;
+		}
 	}
-	log_error("forward packets to the client end");
 	return 0;
 }
 
@@ -582,7 +507,7 @@ int CHelperUnit::ProcessGetLevelCount(NETInputPacket * pPacket)
 CClientUnit* CHelperUnit::GetClientUintByUid(const int &uid, CDecoderUnit **pDecoder)
 {
 	CClientUnit* clt = NULL;
-	std::map<int, CDecoderUnit*>::iterator iter = _helperpool->m_objmap.find(uid);
+/* 	std::map<int, CDecoderUnit*>::iterator iter = _helperpool->m_objmap.find(uid);
 	if( iter != _helperpool->m_objmap.end())
 	{
 		(*pDecoder) = iter->second;
@@ -590,16 +515,16 @@ CClientUnit* CHelperUnit::GetClientUintByUid(const int &uid, CDecoderUnit **pDec
 		{
 			clt = (*pDecoder)->get_web_unit();
 		}
-	}
+	} */
 	return clt;
 }
 
 CClientUnit*
-CHelpUnit::_get_client_by_id(const unsigned int& flow, CDecoderUnit** ppDecoder)
+CHelperUnit::_get_client_by_id(const unsigned long& flow, CDecoderUnit** ppDecoder)
 {
 	CClientUnit *clt = NULL;
 
-	std::map<unsigned int, CDecoderUnit*>::iterator iter = _helperpool->m_objmap.find(flow);
+	std::map<unsigned long, CDecoderUnit*>::iterator iter = _helperpool->m_objmap.find(flow);
 	if( iter != _helperpool->m_objmap.end()) {
 		(*ppDecoder) = iter->second;
 		if(*ppDecoder != NULL) {
@@ -611,13 +536,13 @@ CHelpUnit::_get_client_by_id(const unsigned int& flow, CDecoderUnit** ppDecoder)
 }
 
 int
-CHelpUnit::_pay_res(NETInputPacket* pack)
+CHelperUnit::_pay_res(NETInputPacket* pack)
 {
 	int 			ret = 0;
 	string 			json, result;
 	Reader			r;
 	Value			v;
-	unsigned int 	flow;
+	unsigned long 	flow;
 	CClientUnit		*c;
 	CDecoderUnit	*d;
 	NETOutputPacket	out;	
@@ -625,15 +550,15 @@ CHelpUnit::_pay_res(NETInputPacket* pack)
 	json = pack->ReadString();
 
 	if (r.parse(json, v)) {
-		flow = v["flow"].asUInt();
+		flow = v["flow"].asUInt64();
 		result = v["result"].asString();
 
-		out.Begin(SERVER_CMD_REQ);
+		out.Begin(SERVER_CMD_REP);
 		out.WriteInt(0);
 		out.WriteString(result);
 		out.End();
 	} else { /* error handle */
-		out.Begin(SERVER_CMD_REQ);
+		out.Begin(SERVER_CMD_REP);
 		out.WriteInt(1);
 		out.WriteString("");
 		out.End();
@@ -643,7 +568,7 @@ CHelpUnit::_pay_res(NETInputPacket* pack)
 
 	c = _get_client_by_id(flow, &d);
 
-	if (c && c->get_stat() != CONN_FATAL_ERROR) {
+	if (c && c->get_state() != CONN_FATAL_ERROR) {
 		c->add_rsp_buf(out.packet_buf(), out.packet_size());
 		ret = c->send();
 	}
@@ -652,10 +577,10 @@ CHelpUnit::_pay_res(NETInputPacket* pack)
 }
 
 int 
-CHelpUnit::_worker_stat_chk(NETInputPacket* pack)
+CHelperUnit::_worker_stat_chk(NETInputPacket* pack)
 {
 	int 			cmd;
-	unsigned int 	len;
+	int 			len;
 	unsigned int	ctime;
 	  
 	cmd = pack->GetCmdType();
@@ -682,10 +607,11 @@ CHelpUnit::_worker_stat_chk(NETInputPacket* pack)
 	g_pDebugLog->logMsg("_w_ctime: %d", gSvrStat->_w_ctime);
 	g_pDebugLog->logMsg("_n_qlen:  %d", gSvrStat->_n_qlen);
 	g_pDebugLog->logMsg("_w_ctime: %d", gSvrStat->_n_ctime);
-	g_pDebugLog->logMsg("_w_is_busyed: %s", gSvrStat->_w_is_busyed ? "true" : "false");
-	g_pDebugLog->logMsg("_n_is_busyed: %s", gSvrStat->_n_is_busyed ? "true" : "false");
+	g_pDebugLog->logMsg("_w_is_busyed: %s", gSvrSwitch->_w_is_busyed ? "true" : "false");
+	g_pDebugLog->logMsg("_n_is_busyed: %s", gSvrSwitch->_n_is_busyed ? "true" : "false");
 	g_pDebugLog->logMsg("--------Server_Stat end--------");
-
+	
+	return 0;
 }
 
 HTTP_SVR_NS_END

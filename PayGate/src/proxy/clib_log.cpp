@@ -626,3 +626,4 @@ int clib_log::vwrite( const int  ai_level,
 /* }}} */
 
 #endif
+

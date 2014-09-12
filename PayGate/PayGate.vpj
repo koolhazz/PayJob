@@ -228,6 +228,27 @@
 				<F N="src/core/tm_task.cpp"/>
 			</Folder>
 			<Folder Name="include">
+				<Folder Name="Json">
+					<F N="src/include/Json/autolink.h"/>
+					<F N="src/include/Json/config.h"/>
+					<F N="src/include/Json/features.h"/>
+					<F N="src/include/Json/forwards.h"/>
+					<F N="src/include/Json/json.h"/>
+					<F N="src/include/Json/json_batchallocator.h"/>
+					<F N="src/include/Json/json_internalarray.inl"/>
+					<F N="src/include/Json/json_internalmap.inl"/>
+					<F N="src/include/Json/json_reader.cpp"/>
+					<F N="src/include/Json/json_reader.d"/>
+					<F N="src/include/Json/json_tool.h"/>
+					<F N="src/include/Json/json_value.cpp"/>
+					<F N="src/include/Json/json_value.d"/>
+					<F N="src/include/Json/json_valueiterator.inl"/>
+					<F N="src/include/Json/json_writer.cpp"/>
+					<F N="src/include/Json/json_writer.d"/>
+					<F N="src/include/Json/reader.h"/>
+					<F N="src/include/Json/value.h"/>
+					<F N="src/include/Json/writer.h"/>
+				</Folder>
 				<F N="src/include/app_combo_protocol.h"/>
 				<F N="src/include/atomic.h"/>
 				<F N="src/include/atomic_asm.h"/>
@@ -262,20 +283,6 @@
 				<F N="src/include/tm_task.h"/>
 			</Folder>
 			<Folder Name="proxy">
-				<Folder Name="Json">
-					<F N="src/proxy/Json/autolink.h"/>
-					<F N="src/proxy/Json/CmnHdr.h"/>
-					<F N="src/proxy/Json/config.h"/>
-					<F N="src/proxy/Json/forwards.h"/>
-					<F N="src/proxy/Json/json.h"/>
-					<F N="src/proxy/Json/json_batchallocator.h"/>
-					<F N="src/proxy/Json/json_reader.cpp"/>
-					<F N="src/proxy/Json/json_value.cpp"/>
-					<F N="src/proxy/Json/json_writer.cpp"/>
-					<F N="src/proxy/Json/reader.h"/>
-					<F N="src/proxy/Json/value.h"/>
-					<F N="src/proxy/Json/writer.h"/>
-				</Folder>
 				<F N="src/proxy/cache.cpp"/>
 				<F N="src/proxy/CHelper_pool.cpp"/>
 				<F N="src/proxy/CHelper_pool.h"/>

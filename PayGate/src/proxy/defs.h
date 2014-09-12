@@ -100,12 +100,12 @@ const int SERVER_BROADCAST_INFO_NEW = 0x7054;//�µĹ㲥Э��
 const int CLINET_REQUEST_BROADCAST_INFO = 0x7055; //�����ն����͵Ĺ㲥
 
 #ifndef CONST_T
-#define CONST_T(T, V, v, b) (const T V = v + b)
+#define CONST_T(T, V, v, b) const T V = v + b
 #define CMD(V, v, b) CONST_T(int, V, v, b)
 #else
 #undef CONST_T
 #undef CMD
-#define CONST_T(T, V, v, b) (const T V = v + b)
+#define CONST_T(T, V, v, b) const T V = v + b
 #define CMD(V, v, b) CONST_T(int, V, v, b)
 #endif
 
@@ -124,11 +124,11 @@ CMD(SERVER_CMD_REP, 0x1, SERVER_BASE);					/* 支付响应 */
 CMD(INTER_CMD_REQ, 0x1, INTER_REQ_BASE);				/* 内部支付请求 */
 CMD(INTER_CMD_RES, 0x1, INTER_RES_BASE);				/* 内部支付响应 */
 
-CMD(INTER_CMD_WAITER_STAT_REQ, 0x2, INTER_REQ_BASE);   	/* Waiter队列状态请求 */
-CMD(INTER_CMD_WAITER_STAT_RES, 0x2, INTER_RES_BASE);  	/* Waiter队列状态响应 */
+CMD(INTER_CMD_WAITER_STAT_REQ, 0x2, INTER_REQ_BASE);   	/* Waiter队列状态请�?*/
+CMD(INTER_CMD_WAITER_STAT_RES, 0x2, INTER_RES_BASE);  	/* Waiter队列状态响�?*/
 
-CMD(INTER_CMD_NOTIFY_STAT_REQ, 0x3, INTER_REQ_BASE);	/* Notify队列状态请求 */	
-CMD(INTER_CMD_NOTIFY_STAT_RES, 0x3, INTER_RES_BASE);	/* Notify队列状态响应 */
+CMD(INTER_CMD_NOTIFY_STAT_REQ, 0x3, INTER_REQ_BASE);	/* Notify队列状态请�?*/	
+CMD(INTER_CMD_NOTIFY_STAT_RES, 0x3, INTER_RES_BASE);	/* Notify队列状态响�?*/
 
 enum {
 	JobWorkerType = 1,
@@ -150,7 +150,7 @@ struct server_switch_s {
 };
 
 CONST_T(int, SVR_MAX_W_QLEN, 1024, 0);
-CONST_T(int, SRV_MAX_N_QLEN, 1024, 0);
+CONST_T(int, SVR_MAX_N_QLEN, 1024, 0);
 
 
 #endif

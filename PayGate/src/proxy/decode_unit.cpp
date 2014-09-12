@@ -124,7 +124,7 @@ CDecoderUnit::~CDecoderUnit (void)
 {	
 	if(_flag > 0)
 	{
-		std::map<int, CDecoderUnit*>::iterator iter = _helperpool->m_objmap.find(_flag);
+		std::map<unsigned long, CDecoderUnit*>::iterator iter = _helperpool->m_objmap.find(_flag);
 		if(iter != _helperpool->m_objmap.end())
 		{
 			_helperpool->m_objmap.erase(iter);

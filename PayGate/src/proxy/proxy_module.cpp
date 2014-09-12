@@ -1,16 +1,17 @@
-#include <stdio.h>
-#include <errno.h>
-#include <global.h>
-#include <incoming.h>
-#include <log.h>
-#include <proxy_module.h>
-#include <cache.h>
-#include <CHelper_pool.h>
-#include <signal.h>
+#include "global.h"
+#include "incoming.h"
+#include "log.h"
+#include "proxy_module.h"
+#include "cache.h"
+#include "CHelper_pool.h"
 #include "clib_log.h"
 #include "watchdog.h"
-#include <assert.h>
 #include "RealTimer.h"
+
+#include <assert.h>
+#include <stdio.h>
+#include <errno.h>
+#include <signal.h>
 
 using namespace comm::sockcommu;
 
@@ -36,7 +37,6 @@ server_switch_t	*gSvrSwitch;
 
 CLevelCountTimer*	_LevelCountTimer;	//获取场次人数的定时器
 
-
 CProxyModule::CProxyModule (void)
 {
 }
@@ -60,6 +60,9 @@ int CProxyModule::open (int argc, char** argv)
 
 	gSvrStat = new server_stat_t;
 	assert(gSvrStat != NULL);
+
+	gSvrSwitch = new server_switch_t;
+	assert(gSvrSwitch != NULL);
 
     if(TGlobal::DaemonInit("../conf/config.xml") < 0)
 		return -1;

@@ -23,7 +23,7 @@ struct TPkgHeader {
 	 unsigned char  code;
 };
 
-typedef pkg_header_s pkg_header_t;
+typedef struct pkg_header_s pkg_header_t;
 struct pkg_header_s {
 	 short 			length;
 	 char  			flag[2];	 	
@@ -51,10 +51,9 @@ struct payer_s {
 
 class CClientUnit : public CPollerObject, 
 					private CTimerObject, 
-					private noncopyable 
-{
+					private noncopyable {
 public:
-	CClientUnit (CDecoderUnit*, int, unsigned int);
+	CClientUnit (CDecoderUnit*, int, unsigned long);
 	virtual ~CClientUnit ();
 
     int Attach (void);
@@ -107,16 +106,16 @@ public:
 	int HandleInputBuf(const char* data, int len);
 	bool CheckCmd(int cmd);
 
-	unsigned int 
+	unsigned long 
 	get_flow() { return _flow; }
 	
-	int
-	set_flow(unsigned int flow) { _flow = flow; }
+	void
+	set_flow(unsigned long flow) { _flow = flow; }
 	
 	payer_t
 	get_payer() { return _payer; }
 	
-	int
+	void
 	set_payer(payer_t* p) { _payer.id = p->id; _payer.mid = p->mid; }
 	
 private:
@@ -156,8 +155,7 @@ private:
 	int             _login_flag;
 	CRawCache       _r;
 	CRawCache       _w;
-	
-	unsigned int 	_flow; // 数字标示
+	unsigned long 	_flow; // 数字标示
 	payer_t			_payer; // 支付用户信息
 };
 HTTP_SVR_NS_END

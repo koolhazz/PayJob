@@ -1,3 +1,12 @@
+#include "watchdog.h"
+#include "Json/json.h"
+#include "clib_log.h"
+#include "mempool.h"
+#include "CHelper_pool.h"
+#include "defs.h"
+#include "client_unit.h"
+#include "decode_unit.h"
+
 #include <stdio.h>
 #include <sys/un.h>
 #include <string.h>
@@ -6,37 +15,26 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include <client_unit.h>
-#include <decode_unit.h>
 #include <memcheck.h>
 #include <log.h>
-#include <sys/types.h>
 #include <iomanip>
 #include <fstream>
 #include <ctime>
 #include <iostream>
 #include <cache.h>
-#include "mempool.h"
 #include <iomanip>
 #include <fstream>
 #include <ctime>
 #include <iostream>
 #include <helper_unit.h>
 #include <memcheck.h>
-#include <CHelper_pool.h>
 #include <sstream>
-#include <defs.h>
 #include <MarkupSTL.h>
-#include <Json/json.h>
 #include <time.h>
 #include <sys/time.h>
-#include "watchdog.h"
 
-#include "clib_log.h"
 extern clib_log* g_pDebugLog;
 extern clib_log* g_pErrorLog;
-
-#include "json.h"
 
 using namespace comm::sockcommu;
 using namespace Json;
@@ -69,13 +67,13 @@ int GetRand()
 
 CClientUnit::CClientUnit(CDecoderUnit* decoderunit, int fd, unsigned long flow): 
 	CPollerObject (decoderunit->pollerunit(), fd),
+	_api(0),
+	_send_error_times(0),
 	_stage (CONN_IDLE),
+	_decodeStatus(DECODE_WAIT_HEAD),
 	_decoderunit (decoderunit),
 	_uid(0),
 	_login_flag(0),
-	_decodeStatus(DECODE_WAIT_HEAD),
-	_api(0),
-	_send_error_times(0),
 	_r(*_webMp),
 	_w(*_webMp),
 	_flow(flow)
@@ -329,7 +327,7 @@ TDecodeStatus CClientUnit::proc_pkg () // recv
 int 
 CClientUnit::HandleInput(const char* data,  int len) /* 数据包合法性检查 */
 {
-	int headLen, pkgLen;
+	int headLen, pkglen;
 	
 	headLen = sizeof(struct TPkgHeader);
 	g_pDebugLog->logMsg("ffffffffffff  [%d]",headLen);  
@@ -375,458 +373,23 @@ CClientUnit::HandleInputBuf(const char *pData, int len)
 	int 			cmd = 0, ret = 0;
 	string 			ReqMsg;
 
-
 	reqPacket.Copy(pData, len);
 	cmd = reqPacket.GetCmdType();
 
 	g_pErrorLog->logMsg("%s||HandleInputBuf cmd:[0x%x]",__FUNCTION__, cmd);
-	if(TGlobal::_debugLogSwitch && _uid > 0) {
-		g_pDebugLog->logMsg("%s|0x%x|%d|%d|", __FUNCTION__, cmd, _uid, _api);
-	}
 	
 	/* 协议命令处理 */
 	switch (cmd) {
 		case CLIENT_CMD_REQ:  /* 支付请求处理 */
 			ret = client_cmd_req_handler(&reqPacket);
-
 			break;
 		default:
 			ret = -1; // 命令字不合法
+			g_pErrorLog->logMsg("cmd %d is invailed.", cmd);
 			break;
 	}
 
 	return ret; /* 结束 */
-
-	if(cmd == CLIENT_COMMAND_BREAK_TIME) {
-		NETOutputPacket resPacket;
-		resPacket.Begin(SERVER_COMMAND_BREAK_TIME);
-		resPacket.End();
-		add_rsp_buf(resPacket.packet_buf(), resPacket.packet_size());
-		g_pErrorLog->logMsg("111111111111111111");
-		return send();
-	} else if(cmd == SERVER_GET_PLAYER_COUNT) {
-		g_pErrorLog->logMsg("333333333333333");
-		return ProcGetUserCount(&reqPacket);
-	} else if(cmd == SERVER_BROADCAST_INFO) {//system broadcast 
-		CEncryptDecrypt encryptdecrypt;
-		encryptdecrypt.DecryptBuffer(&reqPacket);
-		string key = reqPacket.ReadString();
-		if(key != TGlobal::_key)
-		{
-			g_pErrorLog->logMsg("%s||Invalid key, key:[%s], TGlobalKey:[%s]", __FUNCTION__, key.c_str(), TGlobal::_key.c_str());
-			return -1;
-		}
-
-		short type = reqPacket.ReadShort();
-		string info = reqPacket.ReadString();
-
-		NETOutputPacket resPacket;
-		resPacket.Begin(SERVER_BROADCAST_INFO_NEW);
-		resPacket.WriteShort(type);
-		resPacket.WriteString(info.c_str());
-		//g_pErrorLog->logMsg("type[%d]info[%s]",type,info.c_str());
-		resPacket.End();
-		encryptdecrypt.EncryptBuffer(&resPacket);
-		
-		map<int, CDecoderUnit*>::iterator iter = _helperpool->m_objmap.begin();
-		for(; iter!=_helperpool->m_objmap.end(); iter++)		
-		{
-			CDecoderUnit* pDecoderUnit = iter->second;
-			if(pDecoderUnit != NULL)
-			{
-				CClientUnit* pClientUnit = pDecoderUnit->get_web_unit();
-				if(pClientUnit != NULL)
-				{
-					if(pClientUnit->get_state() != CONN_FATAL_ERROR)
-					{
-						pClientUnit->add_rsp_buf(resPacket.packet_buf(), resPacket.packet_size());
-						pClientUnit->send();
-					}
-				}
-			}
-		}
-		return 0;
-	}
-	else if( cmd == CLINET_REQUEST_BROADCAST_INFO )
-	{
-		CEncryptDecrypt encryptdecrypt;
-		encryptdecrypt.DecryptBuffer(&reqPacket);
-		string info = reqPacket.ReadString();
-
-		NETOutputPacket resPacket;
-		resPacket.Begin(CLINET_REQUEST_BROADCAST_INFO);
-		resPacket.WriteString(info.c_str());
-		//g_pErrorLog->logMsg("info[%s]",info.c_str());
-		resPacket.End();
-		encryptdecrypt.EncryptBuffer(&resPacket);
-		
-		map<int, CDecoderUnit*>::iterator iter = _helperpool->m_objmap.begin();
-		for(; iter!=_helperpool->m_objmap.end(); iter++)		
-		{
-			CDecoderUnit* pDecoderUnit = iter->second;
-			if(pDecoderUnit != NULL)
-			{
-				CClientUnit* pClientUnit = pDecoderUnit->get_web_unit();
-				if(pClientUnit != NULL)
-				{
-					if(pClientUnit->get_state() != CONN_FATAL_ERROR)
-					{
-						//g_pErrorLog->logMsg(" send info[%s]",info.c_str());
-						pClientUnit->add_rsp_buf(resPacket.packet_buf(), resPacket.packet_size());
-						pClientUnit->send();
-					}
-				}
-			}
-		}
-		return 0;
-	}
-
-	if(cmd > CMD_SEPARATE)//游戏server命令字
-	{
-		g_pErrorLog->logMsg("44444444444");
-		if(_uid <= 0)
-		{
-			g_pErrorLog->logMsg("%s||Invalid user active, cmd:[0x%x], api:[%d]",
-				__FUNCTION__, cmd, _api);//未登陆直接发包，此处走不通
-			return -1;
-		}	
-		CGameUnit *pGameUnit = _decoderunit->get_game_unit();
-		if(pGameUnit != NULL)
-		{
-			if(pGameUnit->tid==0 && TGlobal::InWhiteList(_helperpool->m_whitelist, cmd))
-			{
-				g_pErrorLog->logMsg("%s||Invalid GameServer commond, cmd:[0x%x], uid:[%d], api:[%d], ip:[%s], port:[%d]", 
-					__FUNCTION__, cmd, _uid, _api, pGameUnit->addr.c_str(), pGameUnit->port);
-				return 0;
-			}
-			
-			pGameUnit->append_pkg(pData, len);
-			SendIPSetPacket(pGameUnit, reqPacket, cmd);
-				
-			if(pGameUnit->send_to_logic(_decoderunit->get_helper_timer()) < 0)
-			{ 
-				g_pErrorLog->logMsg("%s||Send to GameServer failed, cmd:[0x%x], uid:[%d], api:[%d], ip:[%s], port:[%d]", 
-					__FUNCTION__, cmd, _uid, _api, pGameUnit->addr.c_str(), pGameUnit->port);
-				return -1;
-			}
-		}
-		else
-		{
-			g_pErrorLog->logMsg("%s||pGameUnit==NULL, cmd:[0x%x], uid:[%d], api:[%d]", 
-				__FUNCTION__, cmd, _uid, _api);
-			return -1;
-		}
-		g_pErrorLog->logMsg("5555555555555555");
-
-		return 0;
-	}
-	else
-	{
-		if(cmd == SYS_RELOAD_CONFIG)
-		{
-			string strFlag = reqPacket.ReadString();
-			if(strFlag != "!@#$%^&*()")//¼òµ¥ÑéÖ¤ÏÂ
-				return -1;
-			if(ResetHelperUnit() < 0)
-			{
-				log_error("HandleInputBuf||Reload config failed, svid:[%d]", TGlobal::_svid);
-			}
-			else
-			{
-				log_error("HandleInputBuf||Reload config success, svid:[%d]", TGlobal::_svid);
-			}
-		g_pErrorLog->logMsg("666666666666666");
-
-			return 0;
-		}
-		else if(cmd == SYS_RELOAD_IP_MAP)
-		{
-			string strFlag = reqPacket.ReadString();
-			if(strFlag != "!@#$%^&*()")//¼òµ¥ÑéÖ¤ÏÂ
-				return -1;
-			if(ResetIpMap() < 0)
-			{
-				log_error("HandleInputBuf||Reload ip map failed, svid:[%d]", TGlobal::_svid);
-			}
-			else
-			{
-				log_error("HandleInputBuf||Reload ip map success, svid:[%d]", TGlobal::_svid);
-			}
-		g_pErrorLog->logMsg("7777777777777");
-
-			return 0;
-		}
-		else if(cmd == SYS_RESET_CONNECT_TIMER)
-		{
-			string strFlag = reqPacket.ReadString();			
-			if(strFlag != "!@#$%^&*()")//¼òµ¥ÑéÖ¤ÏÂ
-				return -1;
-			int timeout = reqPacket.ReadInt();
-			TGlobal::_timerConnect = timeout;
-			log_error("HandleInputBuf||Reset Connect timer success, svid:[%d], timer[%d]", TGlobal::_svid, TGlobal::_timerConnect);
-			return 0;	
-		}
-		else if(cmd == SYS_OPEN_DEBUG)
-		{
-		g_pErrorLog->logMsg("88888888888");
-
-			return ProcessOpenDebug(&reqPacket);
-		}
-		
-		if(!CheckCmd(cmd))
-		{
-		g_pErrorLog->logMsg("99999999999999");
-
-			return 0;
-		}
-
-		CHelperUnit *pHelperUnit = NULL;
-		if(cmd == CMD_REQUIRE_IP_PORT)//ÓÃ»§ÇëÇóÄ³¸öserverµÄipºÍ¶Ë¿Ú
-		{
-			if(_uid <= 0)
-			{
-				g_pErrorLog->logMsg("121212");
-				return -1;
-			}
-			
-			CEncryptDecrypt encryptdecrypt;
-			encryptdecrypt.DecryptBuffer(&reqPacket);
-			short serverId = reqPacket.ReadShort();
-			int svid = GetAllocFromSid(serverId);
-			map<int, CHelperUnit*>::iterator iterHelper = _helperpool->m_helpermap.find(svid);
-			if(iterHelper != _helperpool->m_helpermap.end())
-			{
-				pHelperUnit = iterHelper->second;
-			}
-			else
-			{
-				g_pErrorLog->logMsg("%s||Can not find helper, cmd:[0x%x], uid:[%d], api:[%d], svid:[%d]", 
-					__FUNCTION__, cmd, _uid, _api, svid); //ÕÒ²»µ½alloc helper
-				return -1;
-			}	
-		}
-		else if(cmd == CMD_GET_NEW_ROOM)//È¥Ä³¸öserverÖÐ»ñÈ¡×À×Ó
-		{
-			g_pErrorLog->logMsg("00000021");
-			return ProcUserGetNewRoom(&reqPacket);
-		}
-		else if(cmd==CLIENT_CMD_REQUEST_LIST_ROOM  )//Ë½ÈË·¿
-		{
-			if(_uid <= 0)
-			{
-				g_pErrorLog->logMsg("131414");
-				return -1;
-			}
-			
-			CEncryptDecrypt encryptdecrypt;
-			encryptdecrypt.DecryptBuffer(&reqPacket);
-			int nLevel = reqPacket.ReadInt();
-
-			g_pErrorLog->logMsg("%s||qequest room list cmd:[0x%x], uid:[%d], level:[%d]", __FUNCTION__, cmd, _uid, nLevel);
-
-			map<int, vector<int> >::iterator iter = _helperpool->m_levelmap.find(nLevel);//Ë½ÈË·¿µÈ¼¶0
-			if(iter != _helperpool->m_levelmap.end())
-			{
-				vector<int>& v = iter->second;
-				if((int)v.size() > 0)
-				{
-					int svid = TGlobal::RandomSvid(v);
-					map<int, CHelperUnit*>::iterator iterHelper = _helperpool->m_helpermap.find(svid);
-					if(iterHelper != _helperpool->m_helpermap.end())
-					{
-						pHelperUnit = iterHelper->second;
-					}
-					else
-					{
-						g_pErrorLog->logMsg("%s||Can not find helper, cmd:[0x%x], uid:[%d], api:[%d], svid:[%d]", 
-							__FUNCTION__, cmd, _uid, _api, svid); //找不到alloc helper
-						return -1;
-					}
-				}
-			}
-			else
-			{
-				g_pErrorLog->logMsg("%s||Can not find level, cmd:[0x%x], uid:[%d], api:[%d], level:[%d]", 
-					__FUNCTION__, cmd, _uid, _api, nLevel); //找不到alloc helper
-				return -1;
-			}
-		}
-		else if ( cmd==CLIENT_CMD_ENTER_ROOM )
-		{
-			if(_uid <= 0)
-			{
-				g_pErrorLog->logMsg("6768686");
-				return -1;
-			}
-			
-			CEncryptDecrypt encryptdecrypt;
-			encryptdecrypt.DecryptBuffer(&reqPacket);
-			int nLevel = reqPacket.ReadInt();
-			int ntid = reqPacket.ReadInt();
-
-			g_pErrorLog->logMsg(" tid [%d] room list cmd:[0x%x], uid:[%d], level:[%d]", ntid, cmd, _uid, nLevel);
-
-			map<int, vector<int> >::iterator iter = _helperpool->m_levelmap.find(nLevel);//Ë½ÈË·¿µÈ¼¶0
-			if(iter != _helperpool->m_levelmap.end())
-			{
-				vector<int>& v = iter->second;
-				if((int)v.size() > 0)
-				{
-					int svid = TGlobal::RandomSvid(v);
-					map<int, CHelperUnit*>::iterator iterHelper = _helperpool->m_helpermap.find(svid);
-					if(iterHelper != _helperpool->m_helpermap.end())
-					{
-						pHelperUnit = iterHelper->second;
-					}
-					else
-					{
-						g_pErrorLog->logMsg("%s||Can not find helper, cmd:[0x%x], uid:[%d], api:[%d], svid:[%d]", 
-							__FUNCTION__, cmd, _uid, _api, svid); //找不到alloc helper
-						return -1;
-					}
-				}
-			}
-			else
-			{
-				g_pErrorLog->logMsg("%s||Can not find level, cmd:[0x%x], uid:[%d], api:[%d], level:[%d]", 
-					__FUNCTION__, cmd, _uid, _api, 0); //找不到alloc helper
-				return -1;
-			}
-		}
-		else if( cmd == CMD_GET_ROOM_LEVER_NUM )
-		{
-			return ProcessGetLevelCount(&reqPacket);
-		}		
-		else 
-		{
-			if(cmd == CLIENT_CMD_CLIENT_LOGIN) /* 登录命令字 */
-			{
-				CEncryptDecrypt encryptdecrypt;
-				encryptdecrypt.DecryptBuffer(&reqPacket);
-				int uid = reqPacket.ReadInt();
-				short api = reqPacket.ReadShort();
-
-				g_pErrorLog->logMsg("%s||HandleInputBuf uid:[%d], api[%d]",__FUNCTION__, uid, api);
-
-				if(uid <= 0)//×öuid³õ²½ÅÐ¶Ï
-				{
-					struct in_addr addr;
-					addr.s_addr = _decoderunit->get_ip();
-					string ip = inet_ntoa(addr);
-					g_pErrorLog->logMsg("%s||Invalid Client, cmd:[0x%x], uid:[%d], ip:[%s], api:[%hd]", __FUNCTION__, cmd, uid, ip.c_str(),api);
-					return -1;
-				}
-				
-				map<int, CDecoderUnit*>::iterator iter = _helperpool->m_objmap.find(uid); 
-				if(iter != _helperpool->m_objmap.end())
-				{
-					CDecoderUnit *pDecoderUnit = iter->second;
-					if(pDecoderUnit!=NULL && pDecoderUnit!=_decoderunit)//增加一条连接处理连续2个登陆包
-					{
-						NETOutputPacket resPacket;
-						resPacket.Begin(SERVER_CMD_KICK_OUT);
-						resPacket.End();
-						encryptdecrypt.EncryptBuffer(&resPacket);
-						CClientUnit *pClientUnit = pDecoderUnit->get_web_unit();
-						if(pClientUnit != NULL)
-						{
-							pClientUnit->add_rsp_buf(resPacket.packet_buf(), resPacket.packet_size());
-							pClientUnit->send();
-							pDecoderUnit->set_conn_type(CONN_OTHER);
-							pDecoderUnit->complete();
-							
-							struct in_addr addr1;
-							addr1.s_addr = _decoderunit->get_ip();
-							string ip1 = inet_ntoa(addr1);
-							
-							struct in_addr addr2;
-							addr2.s_addr = pDecoderUnit->get_ip();
-							string ip2 = inet_ntoa(addr2);
-							
-							g_pErrorLog->logMsg("%s||Kick the same user, cmd:[0x%x], uid:[%d], api:[%d], [%s-%s]", 
-								__FUNCTION__, cmd, uid, pClientUnit->_api, ip1.c_str(), ip2.c_str());
-						}
-						else
-						{
-							g_pErrorLog->logMsg("%s||pClientUnit==NULL, cmd:[0x%x], uid:[%d], api:[%d]", 
-								__FUNCTION__, cmd, uid, api);
-						}
-					}
-				}
-
-				if(_uid>0 && _uid!=uid)//已经登陆过了,并且uid不同
-				{
-					g_pErrorLog->logMsg("%s||Already Login, uid:[%d], _uid:[%d], api:[%hd]", 
-						__FUNCTION__, uid, _uid, _api);
-					return -1;
-				}
-				_decoderunit->set_flag(uid);
-				_decoderunit->set_conn_type(CONN_CLINET);
-				_uid = uid;
-				_api = api;
-				_helperpool->m_objmap[uid] = _decoderunit;
-
-				if(TGlobal::_debugLogSwitch && _uid>0)
-				{
-					g_pDebugLog->logMsg("%s|0x%x|%d|%d", __FUNCTION__, cmd, _uid, _api);
-				}
-			}
-			else
-			{
-				if(_uid <= 0)
-				{
-					g_pErrorLog->logMsg("%s||Invalid user active, cmd:[0x%x], api:[%d]", 
-						__FUNCTION__, cmd, _api);//未登陆直接发包，此处走不通
-					return -1;
-				}
-			}
-			
-			if((int)_helperpool->m_svidlist.size() > 0)
-			{
-				int svid = TGlobal::LoopSvid(_helperpool->m_svidlist);
-				map<int, CHelperUnit*>::iterator iterHelper = _helperpool->m_helpermap.find(svid);
-				if(iterHelper != _helperpool->m_helpermap.end())
-				{
-					pHelperUnit = iterHelper->second;
-				}
-				else
-				{
-					g_pErrorLog->logMsg("%s||Can not find helper, cmd:[0x%x], uid:[%d], api:[%d], svid:[%d]",
-						__FUNCTION__, cmd, _uid, _api, svid); 
-					return -1;
-				}
-			}
-		}
-		g_pErrorLog->logMsg("QQQQQQQQQQQQQQQQ");
-		if(pHelperUnit != NULL)
-		{
-			NETOutputPacket transPacket;
-			transPacket.Begin(CLIENT_PACKET2);
-			transPacket.WriteInt(_uid);
-			transPacket.WriteInt(TGlobal::_svid);//标志哪个server发的
-			transPacket.WriteInt(_decoderunit->get_ip());
-			transPacket.WriteShort(_api);
-			transPacket.WriteBinary(pData, len);
-			transPacket.End();
-			pHelperUnit->append_pkg(transPacket.packet_buf(), transPacket.packet_size());
-			if(pHelperUnit->send_to_logic(_decoderunit->get_helper_timer()) < 0)
-			{
-				g_pErrorLog->logMsg("%s||Send to AllocServer failed, cmd:[0x%x], uid:[%d] api:[%d]", __FUNCTION__, cmd, _uid,_api); //ÕÒ²»µ½alloc helper
-				if(cmd==CLIENT_CMD_REQUEST_LIST_ROOM)//Ë½ÈË·¿ÓÐÎÊÌâÒ²ÈÃÓÃ»§µÇÂ¼³É¹¦
-				{
-					g_pErrorLog->logMsg("2224678222");
-					return 0;
-				}
-				else
-				{
-					g_pErrorLog->logMsg("98898");
-					return -1;
-				}
-			}
-		}
-	}
-	g_pErrorLog->logMsg("7523");
-	return 0;
 }
 
 
@@ -1245,12 +808,12 @@ CClientUnit::client_cmd_req_handler(NETInputPacket* pack)
 
 	/* parse json and add flow feild */
 	if (reader.parse(ReqMsg, value)) {
-		value["flow"] = this->_flow;
-		value["time"] = time(NULL);
+		value["flow"] = (UInt64)this->_flow;
+		value["time"] = (unsigned int)time(NULL);
 
 		ReqJson = writer.write(value);
 
-		out.Begin(INNER_CMD_REQ);
+		out.Begin(INTER_CMD_REQ);
 		out.WriteInt(ReqType);
 		out.WriteString(ReqJson);
 		out.End();
@@ -1262,11 +825,11 @@ CClientUnit::client_cmd_req_handler(NETInputPacket* pack)
 			h->append_pkg(out.packet_buf(), out.packet_size());
 			ret = h->send_to_logic(_decoderunit->get_helper_timer());
 		} else {
-			g_pErrorLog("JobWorker Not Found.");
+			g_pErrorLog->logMsg("JobWorker Not Found.");
 			return -1;
 		}
 	} else {
-		g_pErrorLog("ReqMsg Parsed Failed.");
+		g_pErrorLog->logMsg("ReqMsg Parsed Failed.");
 		ret = -1;
 	}
 
@@ -1284,7 +847,7 @@ CClientUnit::_get_job_worker()
 	l_iter = _helperpool->m_levelmap.find(JobWorkerType);
 
 	if (l_iter != _helperpool->m_levelmap.end()) {
-		vector<int>& workers; = l_iter->second;
+		vector<int>& workers = l_iter->second;
 
 		if (workers.size() > 0) {
 			job_id = workers[0];
@@ -1297,7 +860,7 @@ CClientUnit::_get_job_worker()
 		}
 	}
 
-	return h
+	return h;
 }
 
 HTTP_SVR_NS_END

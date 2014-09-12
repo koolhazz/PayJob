@@ -51,6 +51,7 @@ private:
 	string IpMap(string& ip);
 
 	CClientUnit* GetClientUintByUid(const int &uid, CDecoderUnit **pDecoder);
+	CClientUnit* _get_client_by_id(const unsigned long& flow, CDecoderUnit** ppDecoder);
 
 	int _worker_stat_chk(NETInputPacket* pack); 	/* Notifyå®Œæˆä»»åŠ¡ */
 	int _pay_res(NETInputPacket* pack); 	/* è¿”å›æ”¯ä»˜è¯·æ±‚ç»“æœ */
@@ -80,13 +81,13 @@ private:
     char            _curRecvBuf[MAX_HELPER_RECV_BUF];
 	short 			_send_error_times;
 
-	//Á¬½ÓÀàĞÍ: TCP_SOCKET\UDP_SOCKET\UNIX_SOCKET
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: TCP_SOCKET\UDP_SOCKET\UNIX_SOCKET
 	int         _type;
-	//¶Ô¶ËĞÅÏ¢: 
+	//ï¿½Ô¶ï¿½ï¿½ï¿½Ï¢: 
 	CSocketAddr _addr;
-	//¶ÁÇëÇócache
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½cache
 	CRawCache   _r;
-	//Ğ´»Ø¸´cache
+	//Ğ´ï¿½Ø¸ï¿½cache
 	CRawCache   _w;
 };
 
