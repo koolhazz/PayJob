@@ -76,7 +76,7 @@ int CEncryptDecrypt::DecryptBuffer(NETInputPacket *pPacket)
 {
 	//效验参数
 	BYTE *pcbDataBuffer = (BYTE *)pPacket->packet_buf() + NETOutputPacket::PACKET_HEADER_SIZE;
-	WORD wDataSize = pPacket->GetBodyLength()-7;
+	WORD wDataSize = pPacket->GetBodyLength() - 7;
 	//效验码与字节映射
 
 	BYTE cbCheckCode=pPacket->GetcbCheckCode();

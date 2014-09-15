@@ -327,7 +327,8 @@ TDecodeStatus CClientUnit::proc_pkg () // recv
 int 
 CClientUnit::HandleInput(const char* data,  int len) /* 数据包合法性检查 */
 {
-	int headLen, pkglen;
+	int 			headLen, pkglen;
+	CEncryptDecrypt ed;
 	
 	headLen = sizeof(struct TPkgHeader);
 	g_pDebugLog->logMsg("ffffffffffff  [%d]",headLen);  
@@ -372,6 +373,8 @@ CClientUnit::HandleInputBuf(const char *pData, int len)
 	NETInputPacket 	reqPacket;
 	int 			cmd = 0, ret = 0;
 	string 			ReqMsg;
+	CEncryptDecrypt	ed;
+
 
 	reqPacket.Copy(pData, len);
 	cmd = reqPacket.GetCmdType();
@@ -799,9 +802,11 @@ CClientUnit::client_cmd_req_handler(NETInputPacket* pack)
 	Reader			reader;
 	Value			value;
 	FastWriter		writer;
-	CHelperUnit*	h;	
+	CHelperUnit*	h;
+	CEncryptDecrypt	ed;	
 
 	in = pack;
+	ed.DecryptBuffer(in); /* 解码 */
 
 	ReqType = in->ReadInt();
 	ReqMsg = in->ReadString(); /* json format */
@@ -817,6 +822,8 @@ CClientUnit::client_cmd_req_handler(NETInputPacket* pack)
 		out.WriteInt(ReqType);
 		out.WriteString(ReqJson);
 		out.End();
+
+		ed.EncryptBuffer(&out); /* 编码 */
 
 		/* 获取后台helper，并发送 */
 		h = this->_get_job_worker();

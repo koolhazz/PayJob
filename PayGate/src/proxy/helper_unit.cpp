@@ -135,8 +135,7 @@ int CHelperUnit::connect (void)
 
 	log_debug("*STEP: PROXY CNet::tcp_connect ret :[%d], netfd:[%d]", ret, netfd);
 
-	if (ret < 0)
-	{	
+	if (ret < 0) {	
 		log_error("Connect Helper error, ip:[%s], port:[%d]", addr.c_str(), port);
 		return -1;
 	}
@@ -384,7 +383,8 @@ int CHelperUnit::ProcessGetNewRoom(CDecoderUnit* pDecoder, NETInputPacket* pPack
 
 int CHelperUnit::process_pkg(void)
 {
-	int headLen = 0, totalLen = 0, pkglen = 0;
+	int 			headLen = 0, totalLen = 0, pkglen = 0;
+	CEncryptDecrypt ed;
 
 	g_pDebugLog->logMsg("--------------- CHelperUnit::process_pkg begin --------------");
 
@@ -417,6 +417,7 @@ int CHelperUnit::process_pkg(void)
 		NETInputPacket tranPacket;
 		tranPacket.Copy(_r.data(), pkglen);
 		int nCmd = tranPacket.GetCmdType();
+		ed.DecryptBuffer(&tranPacket); /* 解码 */
 
 		if(_helperpool == NULL) {
 			log_error("_helperpool is null");
@@ -545,7 +546,8 @@ CHelperUnit::_pay_res(NETInputPacket* pack)
 	unsigned long 	flow;
 	CClientUnit		*c;
 	CDecoderUnit	*d;
-	NETOutputPacket	out;	
+	NETOutputPacket	out;
+	CEncryptDecrypt	ed;	
 
 	json = pack->ReadString();
 
@@ -565,6 +567,8 @@ CHelperUnit::_pay_res(NETInputPacket* pack)
 
 		ret = -1;
 	}
+
+	ed.EncryptBuffer(&out);  /* 编码 */
 
 	c = _get_client_by_id(flow, &d);
 

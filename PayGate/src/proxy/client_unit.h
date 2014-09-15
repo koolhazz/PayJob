@@ -137,7 +137,7 @@ private:
 
 	int SendPacketToHelperUnit(CHelperUnit *pHelperUnit, char *pData, int nSize);
 
-	void SendIPSetPacket(CGameUnit* pGameUnit,NETInputPacket &reqPacket, int cmd);	
+	void SendIPSetPacket(CGameUnit* pGameUnit, NETInputPacket &reqPacket, int cmd);	
 	int ProcessOpenDebug(NETInputPacket *pPacket);
 
 	int client_cmd_req_handler(NETInputPacket* pack);
