@@ -189,35 +189,41 @@ int CIncoming::InitHelperUnit() // called by CIncoming::open()  初始化 server.xm
 		
 		while(markup.FindElem("Server"))
 		{
-			int svid =  atoi(markup.GetAttrib("svid").c_str());
-			int level = atoi(markup.GetAttrib("level").c_str());
-			string ip = markup.GetAttrib("ip");
-			int port = atoi(markup.GetAttrib("port").c_str());
+			int 		svid =  atoi(markup.GetAttrib("svid").c_str());
+			int 		level = atoi(markup.GetAttrib("level").c_str());
+			string 		ip = markup.GetAttrib("ip");
+			int 		port = atoi(markup.GetAttrib("port").c_str());
 			CHelperUnit *pHelperUnit = NULL;
+
 			map<int, CHelperUnit*>::iterator iter = _helperpool->m_helpermap.find(svid);
-			if(iter != _helperpool->m_helpermap.end())
-			{
+			if(iter != _helperpool->m_helpermap.end()) {
 				pHelperUnit = iter->second;
-			}
-			else
-			{
+			} else {
 				pHelperUnit = new CHelperUnit(_pollerunit);
-				_helperpool->m_helpermap[svid] = pHelperUnit; // 每个server对应的helper
+				_helperpool->m_helpermap[svid] = pHelperUnit;
 			}
 			 
-			if(pHelperUnit == NULL)
-			{
-				log_boot("pHelperUnit NULL");
+			if (pHelperUnit == NULL) {
+				log_boot("pHelerUnit NULL");
+
 				return -1;
-			}	
+			}
 
 			_helperpool->m_svidlist.push_back(svid);  // server列表
 
 			pHelperUnit->addr = ip;
 			pHelperUnit->port = port;
 
+			if (pHelperUnit->connect() != 0) { /* connect back */
+				log_boot("HelperUnit:[%d] connect failed.", svid);
+				return -1;
+			}
+
 			vector<int>& v = _helperpool->m_levelmap[level];
 			v.push_back(svid);
+
+			this->_active_helper(level, svid);
+
 			log_boot("alloc server id:[%d], level:[%d], ip:[%s], port:[%d]", svid, level, ip.c_str(), port);
 		}
 
@@ -241,8 +247,7 @@ int CIncoming::InitHelperUnit() // called by CIncoming::open()  初始化 server.xm
 
 		_helperpool->m_cmdlist.clear();
 		
-		while(markup.FindElem("Cmd"))
-		{
+		while(markup.FindElem("Cmd")) {
 			int cmd = atoi(markup.GetAttrib("value").c_str());
 			log_boot("cmd:[%d]", cmd);
 			_helperpool->m_cmdlist.push_back(cmd);
@@ -331,5 +336,43 @@ int CIncoming::run (void)
 
     return 0;
 }
+
+int
+CIncoming::_active_helper(const int _level, const int _svid)
+{
+	CHelperUnit		*h;
+	NETOutputPacket out;
+	CEncryptDecrypt ed;
+
+	switch (_level) {
+		case 1:
+			h = _helperpool->m_helpermap[_svid];
+			if (h) {
+				out.Begin(INTER_CMD_WAITER_STAT_REQ);
+				out.End();
+				ed.EncryptBuffer(&out);
+
+				h->append_pkg(out.packet_buf(), out.packet_size());
+				h->send_to_logic();
+			}
+			break; 
+		case 2:
+			h = _helperpool->m_helpermap[_svid];
+			if (h) {
+				out.Begin(INTER_CMD_NOTIFY_STAT_REQ);
+				out.End();
+				ed.EncryptBuffer(&out);
+
+				h->append_pkg(out.packet_buf(), out.packet_size());
+				h->send_to_logic();
+			}
+			break;
+		default:
+			break;
+	}
+
+	return 0;
+}
+
 HTTP_SVR_NS_END
 

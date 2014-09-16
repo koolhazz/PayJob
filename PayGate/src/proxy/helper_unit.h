@@ -31,6 +31,8 @@ public: //method
     int send_to_logic (CTimerList* lst); 
     int append_pkg(const char* buf, unsigned int len);
 	int connect (void);
+
+	int send_to_logic();
 	
   	inline void set_netfd (int fd) 
 	{ 

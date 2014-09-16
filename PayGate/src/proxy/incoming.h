@@ -19,7 +19,9 @@ public: //method
     int open (void);
     int run (void);
 	int InitHelperUnit();
-    
+private:
+	int _active_helper(const int _level, const int _svid);
+
 private: //property
     CPollerUnit*    _pollerunit;
     CListener*      _listener;

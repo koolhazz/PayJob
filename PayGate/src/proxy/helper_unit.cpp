@@ -618,5 +618,18 @@ CHelperUnit::_worker_stat_chk(NETInputPacket* pack)
 	return 0;
 }
 
+int
+CHelperUnit::send_to_logic()
+{
+	EnableInput ();
+	if (connect() < 0)
+	{
+		reset_helper();
+		log_debug("Connect logic server failed!");
+		return -1;
+	}
+	return send_to_cgi();	
+}
+
 HTTP_SVR_NS_END
 
