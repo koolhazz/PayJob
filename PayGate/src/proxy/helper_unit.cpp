@@ -547,13 +547,15 @@ CHelperUnit::_pay_res(NETInputPacket* pack)
 	CClientUnit		*c;
 	CDecoderUnit	*d;
 	NETOutputPacket	out;
-	CEncryptDecrypt	ed;	
+	CEncryptDecrypt	ed;
 
 	json = pack->ReadString();
 
 	if (r.parse(json, v)) {
 		flow = v["flow"].asUInt64();
 		result = v["result"].asString();
+		id = v["id"].asUInt();
+		mid = v["mid"].asUInt();
 
 		out.Begin(SERVER_CMD_REP);
 		out.WriteInt(0);
@@ -573,7 +575,7 @@ CHelperUnit::_pay_res(NETInputPacket* pack)
 	c = _get_client_by_id(flow, &d);
 
 	if (c && c->get_state() != CONN_FATAL_ERROR) {
-		c->add_rsp_buf(out.packet_buf(), out.packet_size());
+		c->add_rsp_buf(out.packet_buf(), out.packet_size()); 
 		ret = c->send();
 	}
 

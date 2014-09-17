@@ -1,19 +1,9 @@
 <?xml version="1.0" encoding="GB2312" ?>
 <SYSTEM>
 <Node>
-	<ServerList><!--每个场启动一个server先-->
-		<Server svid="1" level="1" ip="192.168.100.141" port="2111"/> 
-		<Server svid="2" level="2" ip="192.168.100.141" port="2112"/>
-		<Server svid="3" level="3" ip="192.168.100.141" port="2113"/>
-		<Server svid="4" level="4" ip="192.168.100.141" port="2114"/>
-		<Server svid="5" level="5" ip="192.168.100.141" port="2115"/>
-		<Server svid="6" level="6" ip="192.168.100.141" port="2116"/>
-		<Server svid="7" level="7" ip="192.168.100.141" port="2117"/>
-		<Server svid="8" level="8" ip="192.168.100.141" port="2118"/>
-		<Server svid="9" level="9" ip="192.168.100.141" port="2119"/>
-		<Server svid="10" level="10" ip="192.168.100.141" port="2120"/>
-		<Server svid="11" level="11" ip="192.168.100.141" port="2121"/>
-		<Server svid="12" level="12" ip="192.168.100.141" port="2122"/>
+	<ServerList><!--每????????一??server??-->
+		<Server svid="1" level="1" ip="192.168.100.154" port="48001"/> 
+		<Server svid="2" level="2" ip="192.168.100.154" port="48002"/>
 	</ServerList>
 	<CmdList>
 		<Cmd value="257"/><!--0x0101-->
@@ -42,10 +32,7 @@
 	</CmdList>
 </Node>
 <IPMap>
-        <IP eth0="58.83.135.37" eth1="192.168.1.137"/>
-        <IP eth0="192.168.1.137" eth1="192.168.1.137"/>
-        <IP eth0="192.168.100.141" eth1="192.168.100.141"/>
-        <IP eth0="192.168.100.167" eth1="192.168.100.167"/>
+        <IP eth0="192.168.100.154" eth1="192.168.100.154"/>
 </IPMap>
 <WhiteCmdList>
 	<UidList uids="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20"/>

@@ -2,7 +2,7 @@ module(..., package.seeall)
 
 local redis = require("lib/redis_ffi")
 
-this = {
+consumer = {
 	__redis = nil,
 	__host 	= nil,
 	__port 	= nil,
@@ -20,7 +20,17 @@ function consumer:new(o)
 end
 
 function consumer:init()
+	self.__redis = redis.RedisFFI:NEW()
 
+	if not self.__redis then
+		return false
+	end
+
+	if not self.__redis:CONNECT(self.__host, self.__port) then
+		return false
+	else
+		return true
+	end
 
 end
 
