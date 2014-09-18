@@ -554,8 +554,6 @@ CHelperUnit::_pay_res(NETInputPacket* pack)
 	if (r.parse(json, v)) {
 		flow = v["flow"].asUInt64();
 		result = v["result"].asString();
-		id = v["id"].asUInt();
-		mid = v["mid"].asUInt();
 
 		out.Begin(SERVER_CMD_REP);
 		out.WriteInt(0);

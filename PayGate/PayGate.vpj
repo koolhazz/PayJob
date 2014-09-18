@@ -238,13 +238,10 @@
 					<F N="src/include/Json/json_internalarray.inl"/>
 					<F N="src/include/Json/json_internalmap.inl"/>
 					<F N="src/include/Json/json_reader.cpp"/>
-					<F N="src/include/Json/json_reader.d"/>
 					<F N="src/include/Json/json_tool.h"/>
 					<F N="src/include/Json/json_value.cpp"/>
-					<F N="src/include/Json/json_value.d"/>
 					<F N="src/include/Json/json_valueiterator.inl"/>
 					<F N="src/include/Json/json_writer.cpp"/>
-					<F N="src/include/Json/json_writer.d"/>
 					<F N="src/include/Json/reader.h"/>
 					<F N="src/include/Json/value.h"/>
 					<F N="src/include/Json/writer.h"/>

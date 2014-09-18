@@ -1,0 +1,37 @@
+PayGate --------->  WaiterWorker
+{
+    "flow": "99",
+    "id": "10",
+    "mid": "39999"
+}
+
+
+WaiterWorker ----------> JobWorker
+{
+    "flow": "99",
+    "id": "10",
+    "mid": "39999"
+}
+
+
+JobWorker ---------> NotifyWorker
+
+{
+    "flow": "99",
+    "id": "10",
+    "mid": "39999",
+    "result": "",
+    "errno": "",
+    "errmsg": ""
+}
+
+NotifyWorker ----------> PayGate
+
+{
+    "flow": "99",
+    "id": "10",
+    "mid": "39999",
+    "result":"",
+    "errno":"",
+    "errmsg":""
+}
