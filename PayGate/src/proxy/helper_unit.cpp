@@ -288,99 +288,6 @@ int CHelperUnit::append_pkg(const char* buf, unsigned int len)
 	return 0;
 }
 
-int CHelperUnit::ProcessUserLoginSuccess(CDecoderUnit* pDecoder, NETInputPacket* pPacket)
-{
-	g_pDebugLog->logMsg("--------------- CHelperUnit::ProcessUserLoginSuccess being --------------");
-	CEncryptDecrypt decrypt;
-	decrypt.DecryptBuffer(pPacket);
-	int levelCount = pPacket->ReadInt();
-	g_pDebugLog->logMsg("levelCount %d",levelCount);
-	for(int i=0; i<levelCount; i++)
-	{
-		int level = pPacket->ReadInt();
-		g_pDebugLog->logMsg("level %d",level);
-	}
-	int tid = pPacket->ReadInt();
-	g_pDebugLog->logMsg("tid %d",tid);
-	if(tid > 0)
-	{
-		string ip = pPacket->ReadString();
-		int port = pPacket->ReadInt();
-		CGameUnit *pGameUnit = pDecoder->get_game_unit();
-		if(pGameUnit != NULL)
-		{
-			pGameUnit->addr = IpMap(ip);
-			pGameUnit->port = port;
-			pGameUnit->tid = tid;	
-		}
-
-		g_pErrorLog->logMsg(" ProcessUserLoginSuccess tid:[%d], ip:[%s], port:[%d]", 
-			tid, pGameUnit->addr.c_str(), pGameUnit->port);
-	}
-	
-	g_pDebugLog->logMsg("--------------- CHelperUnit::ProcessUserLoginSuccess end --------------");
-	return 0;
-}
-
-int CHelperUnit::ProcessEnterRoom(CDecoderUnit* pDecoder, NETInputPacket* pPacket)
-{
-	g_pErrorLog->logMsg("--------- CHelperUnit::ProcessEnterRoom begin  ---------------");
-	CEncryptDecrypt decrypt;
-	decrypt.DecryptBuffer(pPacket);
-	int res = pPacket->ReadShort();
-
-	g_pErrorLog->logMsg("res : %d",res);
-
-	if(res)
-	{
-		string ip = pPacket->ReadString();
-		int port = pPacket->ReadInt();
-		int tid = pPacket->ReadInt();
-		g_pErrorLog->logMsg(" ProcessEnterRoom tid:[%d], ip:[%s], port:[%d]",tid, ip.c_str(),port);
-		CGameUnit *pGameUnit = pDecoder->get_game_unit();
-		if(pGameUnit != NULL)
-		{
-			log_debug("ProcessEnterRoom||uid:[%d], tid:[%d], ip:[%s], port:[%d]", pDecoder->get_flag(), tid, ip.c_str(), port);
-			if(pGameUnit->get_netfd()>0 && (pGameUnit->tid>>16)!=(tid>>16))//连接还在并且不是同一个server
-			{
-				pGameUnit->reset_helper();
-			}
-			pGameUnit->addr = IpMap(ip);
-			pGameUnit->port = port;
-			pGameUnit->tid = tid;	
-
-			g_pErrorLog->logMsg(" ProcessEnterRoom tid:[%d], ip:[%s], port:[%d]", 
-			tid, pGameUnit->addr.c_str(), pGameUnit->port);
-		}
-	}
-	g_pErrorLog->logMsg("--------- CHelperUnit::ProcessEnterRoom end  ---------------");
-	return 0;
-}
-
-int CHelperUnit::ProcessGetNewRoom(CDecoderUnit* pDecoder, NETInputPacket* pPacket)
-{
-	CEncryptDecrypt decrypt;
-	decrypt.DecryptBuffer(pPacket);
-	int tid = pPacket->ReadInt();
-	string ip = pPacket->ReadString();
-	int port = pPacket->ReadInt();
-	CGameUnit *pGameUnit = pDecoder->get_game_unit();
-	if(pGameUnit != NULL)
-	{
-		if(pGameUnit->get_netfd()>0 && (pGameUnit->tid>>16)!=(tid>>16))//连接还在并且不是同一个server
-		{
-			pGameUnit->reset_helper();
-		}
-		pGameUnit->addr = IpMap(ip);
-		pGameUnit->port = port;
-		pGameUnit->tid = tid;	
-
-		g_pErrorLog->logMsg(" ProcessGetNewRoom tid:[%d], ip:[%s], port:[%d]", 
-			tid, pGameUnit->addr.c_str(), pGameUnit->port);
-	}
-	return 0;
-}
-
 int CHelperUnit::process_pkg(void)
 {
 	int 			headLen = 0, totalLen = 0, pkglen = 0;
@@ -489,23 +396,8 @@ void CHelperUnit::reset_helper(void)
 	_stage = CONN_IDLE;
 }
 
-
-int CHelperUnit::ProcessGetLevelCount(NETInputPacket * pPacket)
-{
-	CEncryptDecrypt decrypt;
-	decrypt.DecryptBuffer(pPacket);
-	short nCount = pPacket->ReadShort();
-	for( int i = 0; i < nCount; i++)
-	{
-		short nLevel 	= pPacket->ReadShort();
-		int& nUserCount = _helperpool->m_LevelCountMap[nLevel];
-		nUserCount		= pPacket->ReadShort();
-	}	
-
-	return 0;
-}
-
-CClientUnit* CHelperUnit::GetClientUintByUid(const int &uid, CDecoderUnit **pDecoder)
+CClientUnit* 
+CHelperUnit::GetClientUintByUid(const int &uid, CDecoderUnit **pDecoder)
 {
 	CClientUnit* clt = NULL;
 /* 	std::map<int, CDecoderUnit*>::iterator iter = _helperpool->m_objmap.find(uid);

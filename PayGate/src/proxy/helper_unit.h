@@ -44,12 +44,6 @@ public: //method
 		return netfd; 
 	}
 private:
-	int ProcessUserLoginSuccess(CDecoderUnit* pDecoder, NETInputPacket* pPacket);
-	int ProcessEnterRoom(CDecoderUnit* pDecoder, NETInputPacket* pPacket);
-	int ProcessGetNewRoom(CDecoderUnit* pDecoder, NETInputPacket* pPacket);
-
-	int ProcessGetLevelCount(NETInputPacket* pPacket);
-
 	string IpMap(string& ip);
 
 	CClientUnit* GetClientUintByUid(const int &uid, CDecoderUnit **pDecoder);

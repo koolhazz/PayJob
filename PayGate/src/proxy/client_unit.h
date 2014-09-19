@@ -128,11 +128,6 @@ private:
 
 	int ProcessGetLevelCount(NETInputPacket *pPacket);
 
-	int ProcUserGetNewRoom(NETInputPacket *pPacket);
-	int ProcUserGetNewRoom1(CGameUnit *pGameUnit);
-	int ProcUserGetNewRoom2(NETInputPacket *pPacket);
-	int ProcGetUserCount(NETInputPacket* pPacket);
-
 	CHelperUnit* GetRandomHelper(short level);
 
 	int SendPacketToHelperUnit(CHelperUnit *pHelperUnit, char *pData, int nSize);

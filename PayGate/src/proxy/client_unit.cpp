@@ -576,42 +576,6 @@ int CClientUnit::ResetIpMap()
 	return 0;
 }
 
-
-int CClientUnit::ProcessGetLevelCount(NETInputPacket* pPacket)
-{
-	CEncryptDecrypt	encryptDecrypt;
-	encryptDecrypt.DecryptBuffer(pPacket);
-	short levelCount = pPacket->ReadShort();
-	NETOutputPacket resPacket;
-	resPacket.Begin(CMD_GET_ROOM_LEVER_NUM);
-	resPacket.WriteShort(levelCount);
-	for(int i=0; i<levelCount; i++)
-	{
-		int randCount = GetRand();
-		short level = pPacket->ReadShort();
-		resPacket.WriteShort(level);
-		map<short, int>::iterator iter = _helperpool->m_LevelCountMap.find(level);
-		if(iter != _helperpool->m_LevelCountMap.end())
-		{
-			int& userCount = iter->second;
-			if(userCount > 32000)
-			{
-				userCount = 32000;
-			}
-			resPacket.WriteShort(userCount+randCount);
-		}
-		else
-		{
-			resPacket.WriteShort(randCount);
-		}
-		
-	}
-	resPacket.End();
-	encryptDecrypt.EncryptBuffer(&resPacket);
-	add_rsp_buf(resPacket.packet_buf(), resPacket.packet_size());
-	return send();
-}
-
 CHelperUnit* CClientUnit::GetRandomHelper(short level)
 {
 	CHelperUnit* pHelperUnit = NULL;
@@ -656,106 +620,6 @@ int CClientUnit::SendPacketToHelperUnit(CHelperUnit* pHelperUnit, char *pData, i
 		return -1;
 	}
 	return 0;
-}
-
-int CClientUnit::ProcUserGetNewRoom(NETInputPacket * pPacket)
-{
-	if(_uid <= 0)
-	{
-		g_pErrorLog->logMsg("%s||Invalid user active, api:[%d]", __FUNCTION__, _api);//未登陆直接发包，此处走不通
-		return -1;
-	}
-	CGameUnit* pGameUnit = _decoderunit->get_game_unit();
-	if( NULL == pGameUnit)
-	{
-		g_pErrorLog->logMsg("%s||GameUnit is NULL",__FUNCTION__);
-		return -1;
-	}
-	if( pGameUnit->tid >0)
-	{
-		return ProcUserGetNewRoom1(pGameUnit);	
-	}
-	else if( 0 == pGameUnit->tid)
-	{
-		return ProcUserGetNewRoom2(pPacket);	
-	}
-	return 0;
-}
-
-int CClientUnit::ProcUserGetNewRoom1(CGameUnit * pGameUnit)
-{
-	if(NULL == pGameUnit)
-	{
-		return -1;
-	}
-	NETOutputPacket	outPkg;
-	outPkg.Begin(CMD_GET_NEW_ROOM);
-	outPkg.WriteInt(pGameUnit->tid);
-	outPkg.WriteString(pGameUnit->addr.c_str());
-	outPkg.WriteInt(pGameUnit->port);
-	outPkg.End();
-
-	if(TGlobal::_debugLogSwitch && _uid>0)
-	{
-		g_pDebugLog->logMsg("%s|0x%x|%d|", __FUNCTION__, CMD_GET_NEW_ROOM, _uid);
-	}
-	
-	CEncryptDecrypt	encryptDecrypt;
-	encryptDecrypt.EncryptBuffer(&outPkg);
-	add_rsp_buf(outPkg.packet_buf(), outPkg.packet_size());
-	return send();
-}
-
-int CClientUnit::ProcUserGetNewRoom2(NETInputPacket* pPacket)
-{
-	CEncryptDecrypt encryptdecrypt;
-	encryptdecrypt.DecryptBuffer(pPacket);
-	short level = pPacket->ReadShort();
-	CHelperUnit* pHelperUnit = GetRandomHelper(level);
-	if(NULL == pHelperUnit)
-	{
-		g_pErrorLog->logMsg("%s||pHelperUnit==NULL, uid:[%d], api:[%d], level:[%d]", __FUNCTION__, _uid, _api, level); //找不到alloc helper
-		return -1;	
-	}
-	NETOutputPacket tempPacket;
-	tempPacket.Copy(pPacket->packet_buf(), pPacket->packet_size()); 
-	encryptdecrypt.EncryptBuffer(&tempPacket);
-	if(SendPacketToHelperUnit(pHelperUnit, tempPacket.packet_buf(), tempPacket.packet_size()) < 0)
-	{
-		return -1;
-	}
-	return 0;
-
-}
-
-int CClientUnit::ProcGetUserCount(NETInputPacket* pPacket)
-{
-	CEncryptDecrypt encryptdecrypt;
-	encryptdecrypt.DecryptBuffer(pPacket);
-	string str = pPacket->ReadString();
-	if(str != "boyaa")
-	{
-		return -1;
-	}
-
-	NETOutputPacket outpkg;
-	outpkg.Begin(SERVER_GET_PLAYER_COUNT);
-	
-	int allUserCount = _helperpool->m_objmap.size();
-	outpkg.WriteInt(allUserCount);
-	
-	int tempSid = TGlobal::_svid;
-	outpkg.WriteInt(tempSid);
-	outpkg.End();
-	encryptdecrypt.EncryptBuffer(&outpkg);
-	if(TGlobal::_debugLogSwitch && _uid>0)
-	{
-		g_pDebugLog->logMsg("%s|0x%x|%d|%d", __FUNCTION__, SERVER_GET_PLAYER_COUNT, _uid, _api);
-	}
-	
-	add_rsp_buf(outpkg.packet_buf(), outpkg.packet_size());
-	return send();		
-
 }
 
 void CClientUnit::SendIPSetPacket(CGameUnit* pGameUnit, NETInputPacket &reqPacket, int cmd)
@@ -857,12 +721,14 @@ CClientUnit::_get_job_worker()
 		vector<int>& workers = l_iter->second;
 
 		if (workers.size() > 0) {
-			job_id = workers[0];
+			job_id = workers[0]; /* 暂时只有一个worker这里直接赋值 */
 
 			h_iter = _helperpool->m_helpermap.find(job_id);
 
 			if (h_iter != _helperpool->m_helpermap.end()) {
 				h = h_iter->second;
+			} else {
+				g_pErrorLog->logMsg("helper null.");
 			}
 		}
 	}
