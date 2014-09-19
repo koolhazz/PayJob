@@ -2,10 +2,17 @@ module(..., package.seeall)
 
 package.cpath = package.cpath .. ";./lib/?.so"
 
-local libcurl 	= require("lib/libcurl")
+local curl 		= require("lib/libcurl")
 local redis 	= require("lib/redis_ffi")
 local ffi 		= require("ffi")
 local json 		= require("cjson")
+local logger 	= require("lua/logger")
+
+local __END__ 	= logger.__END__
+local __BEGIN__ = logger.__BEGIN__
+local __DEBUG__ = logger.__DEBUG__
+local __INFO__ 	= logger.__INFO__
+local __ERROR__ = logger.__ERROR__
 
 producer = {
 	__redis 	= nil, 
@@ -19,9 +26,11 @@ producer = {
 local __response = {}
 
 local function __get_job(_r, _l)
+	__BEGIN__("__get_job")
 	if _r then
+		__DEBUG__("11111")
 		local __job = _r:LPOP(_l)
-
+		__DEBUG__("22222")
 		return __job
 	end
 end
@@ -96,10 +105,16 @@ function producer:set_line(_l)
 end
 
 function producer:produce()
+	__BEGIN__("producer:produce")
+	__DEBUG__("HOST: "..self.__host)
+	__DEBUG__("PORT: "..self.__port)
+	
 	local __job = __get_job(self.__redis, self.__line)
-	local __res = __do_job(self.__curl, self.__service)
+	__DEBUG__("1111")
+	local __res = __do_job(self.__curl, self.__service, __job)
+	__DEBUG__("2222")
 	local _o = json.decode(__job)
-
+	__DEBUG__("3333")
 	if __res == 0 then
 		if _o then
 			_o.result = table.concat(__response, nil)

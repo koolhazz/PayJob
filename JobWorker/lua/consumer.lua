@@ -1,6 +1,13 @@
 module(..., package.seeall)
 
-local redis = require("lib/redis_ffi")
+local redis 	= require("lib/redis_ffi")
+local logger 	= require("lua/logger")
+
+local __END__ 	= logger.__END__
+local __BEGIN__ = logger.__BEGIN__
+local __DEBUG__ = logger.__DEBUG__
+local __INFO__ 	= logger.__INFO__
+local __ERROR__ = logger.__ERROR__
 
 consumer = {
 	__redis = nil,

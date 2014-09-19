@@ -1,5 +1,4 @@
-require("lua/defs.lua")
-
+require("lua/defs")
 
 local producer 	= require("lua/producer")
 local consumer 	= require("lua/consumer")
@@ -27,7 +26,7 @@ local function __init()
 	if O.__pd then
 		local __pd = O.__pd 
 
-		__pd:set_host(config.REDIS_CONF.m_n_host, config.REDIS_CONF.m_n_port)
+		__pd:set_host(config.REDIS_CONF.m_s_host, config.REDIS_CONF.m_n_port)
 		__pd:set_line(config.LINE_CONF.m_s_p_line..config.LINE_CONF.m_n_p_sid)
 		__pd:set_service(config.SERVICE_CONF.m_s_url)
 
@@ -59,8 +58,11 @@ local function __init()
 end
 
 local function __run()
+	__BEGIN__("__run")
 	while true do
+		__DEBUG__("111")
 		local __json = O.__pd:produce()
+		__DEBUG__("222")
 		if __json then
 			O.__pd_cnt = O.__pd_cnt + 1
 		end
@@ -71,9 +73,9 @@ local function __run()
 
 		O.__cs_cnt = O.__cs_cnt + 1
 	end
+	__END__("__run")
 end
 
--- enter
 function start()
 	__BEGIN__("start")
 	if __init() then
@@ -82,6 +84,9 @@ function start()
 		__ERROR__("system init failed.")
 		return -1
 	end
+
+	__run()
+
 	__END__("start")
 end
 
