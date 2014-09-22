@@ -105,8 +105,8 @@ function RedisFFI:NEW(o)
 end
 
 function RedisFFI:FREE(o)
-	if m_t_redis then
-		_redisFree(m_t_redis)
+	if self.m_t_redis then
+		_redisFree(self.m_t_redis)
 	end
 end
 
@@ -114,13 +114,13 @@ function RedisFFI:CONNECT(in_s_host, in_n_port)
 	self.m_s_host = in_s_host
 	self.m_n_port = in_n_port
 
-	m_t_redis = hiredis.redisConnect(in_s_host, in_n_port)
+	self.m_t_redis = hiredis.redisConnect(in_s_host, in_n_port)
 	
-	if not m_t_redis then
+	if not self.m_t_redis then
 		print("Connect Redis Server is Failed.")
-		print("err: "..ffi.string(m_t_redis.errstr, C.strlen(m_t_redis.errstr)))
+		print("err: "..ffi.string(self.m_t_redis.errstr, C.strlen(self.m_t_redis.errstr)))
 		
-		_redisFree(m_t_redis)
+		_redisFree(self.m_t_redis)
 
 		return false
 	else
@@ -135,7 +135,7 @@ function RedisFFI:PRINT_CONFIG( ... )
 end
 
 function RedisFFI:SET(in_s_key, in_s_value)
-	local reply = Cast("redisReply*", Command(m_t_redis, "SET %s %s", in_s_key, in_s_value))
+	local reply = Cast("redisReply*", Command(self.m_t_redis, "SET %s %s", in_s_key, in_s_value))
 	local _result = 0
 
 	if reply then
@@ -150,7 +150,7 @@ function RedisFFI:SET(in_s_key, in_s_value)
 end
 
 function RedisFFI:GET(in_s_key)
-	local reply = Cast("redisReply*", Command(m_t_redis, "GET %s", in_s_key))
+	local reply = Cast("redisReply*", Command(self.m_t_redis, "GET %s", in_s_key))
 	local _result = nil
 
 	if reply then
@@ -165,7 +165,7 @@ function RedisFFI:GET(in_s_key)
 end
 
 function RedisFFI:LPOP(in_s_key)
-	local reply = Cast("redisReply*", Command(m_t_redis, "LPOP %s", in_s_key))
+	local reply = Cast("redisReply*", Command(self.m_t_redis, "LPOP %s", in_s_key))
 	local _result = nil
 
 	if reply then
@@ -180,7 +180,7 @@ function RedisFFI:LPOP(in_s_key)
 end
 
 function RedisFFI:RPUSH(in_s_key, in_s_value)
-	local reply = Cast("redisReply*", Command(m_t_redis, "RPUSH %s %s", in_s_key, in_s_value))
+	local reply = Cast("redisReply*", Command(self.m_t_redis, "RPUSH %s %s", in_s_key, in_s_value))
 	local _result = 0
 
 	if reply then
@@ -195,7 +195,7 @@ function RedisFFI:RPUSH(in_s_key, in_s_value)
 end
 
 function RedisFFI:LLEN(in_s_key)
-	local reple = Cast("redisReply*", Command(m_t_redis, "LLEN %s", in_s_key))
+	local reply = Cast("redisReply*", Command(self.m_t_redis, "LLEN %s", in_s_key))
 	local _result = 0
 
 	if reply then
@@ -210,7 +210,7 @@ function RedisFFI:LLEN(in_s_key)
 end
 
 function RedisFFI:EXPIRE(in_s_key, in_s_sec)
-	local reply = Cast("redisReply*", Command(m_t_redis, "EXPIRE %s %s", in_s_key, in_s_sec))
+	local reply = Cast("redisReply*", Command(self.m_t_redis, "EXPIRE %s %s", in_s_key, in_s_sec))
 	local _result = 0
 
 	if reply then
@@ -225,7 +225,7 @@ function RedisFFI:EXPIRE(in_s_key, in_s_sec)
 end
 
 function RedisFFI:DEL(in_s_key)
-	local reply = Cast("redisReply*", Command(m_t_redis, "DEL %s", in_s_key))
+	local reply = Cast("redisReply*", Command(self.m_t_redis, "DEL %s", in_s_key))
 	local _result = 0
 
 	if reply then
@@ -240,7 +240,7 @@ function RedisFFI:DEL(in_s_key)
 end
 
 function RedisFFI:IsAlived() 
-	local reply = Cast("redisReply*", Command(m_t_redis, "PING"))
+	local reply = Cast("redisReply*", Command(self.m_t_redis, "PING"))
 	local _result = false
 
 	if reply then
@@ -258,7 +258,7 @@ function RedisFFI:IsAlived()
 end
 	
 function RedisFFI:EXISTS(in_s_key)
-	local reply = Cast("redisReply*", Command(m_t_redis, "EXISTS %s", in_s_key))
+	local reply = Cast("redisReply*", Command(self.m_t_redis, "EXISTS %s", in_s_key))
 	local _result = 0
 
 	if reply then
@@ -273,7 +273,7 @@ function RedisFFI:EXISTS(in_s_key)
 end
 
 function RedisFFI:HSET(in_s_name, in_s_key, in_s_value)
-	local _reply = Cast("redisReply*", Command(m_t_redis, "HSET %s %s %s", in_s_name, in_s_key, in_s_value))
+	local _reply = Cast("redisReply*", Command(self.m_t_redis, "HSET %s %s %s", in_s_name, in_s_key, in_s_value))
 	local _result = 0
 
 	if _reply then
@@ -288,7 +288,7 @@ function RedisFFI:HSET(in_s_name, in_s_key, in_s_value)
 end
 
 function RedisFFI:HGET(in_s_name, in_s_key)
-	local _reply = Cast("redisReply*", Command(m_t_redis, "HGET %s %s", in_s_name, in_s_key))
+	local _reply = Cast("redisReply*", Command(self.m_t_redis, "HGET %s %s", in_s_name, in_s_key))
 	local _result = nil
 
 	if _reply then
@@ -303,7 +303,7 @@ function RedisFFI:HGET(in_s_name, in_s_key)
 end
 
 function RedisFFI:HINCRBY(in_s_name, in_s_key, in_s_value)
-	local _reply = Cast("redisReply*", Command(m_t_redis, "HINCRBY %s %s %s", in_s_name, in_s_key, in_s_value))
+	local _reply = Cast("redisReply*", Command(self.m_t_redis, "HINCRBY %s %s %s", in_s_name, in_s_key, in_s_value))
 	local _result = 0
 
 	if not _reply then
@@ -326,7 +326,7 @@ function RedisFFI:HDEL(in_s_name)
 end
 
 function RedisFFI:PUBLISH(in_s_channel, in_s_message)
-	local _reply = Cast("redisReply*", Command(m_t_redis, "PUBLISH %s %s", in_s_channel, in_s_message))
+	local _reply = Cast("redisReply*", Command(self.m_t_redis, "PUBLISH %s %s", in_s_channel, in_s_message))
 	local _result = 0
 
 	if not _reply then
@@ -341,7 +341,7 @@ function RedisFFI:PUBLISH(in_s_channel, in_s_message)
 end
 
 function RedisFFI:SUBSCRIBE(in_s_channel)
-	local _reply = Cast("redisReply*", Command(m_t_redis, "SUBSCRIBE %s", in_s_channel))
+	local _reply = Cast("redisReply*", Command(self.m_t_redis, "SUBSCRIBE %s", in_s_channel))
 	local _result = nil
 
 	if not _reply then
