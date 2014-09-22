@@ -54,10 +54,10 @@ CEncryptDecrypt::~CEncryptDecrypt(void)
 //加密数据
 WORD CEncryptDecrypt::EncryptBuffer(NETOutputPacket *pPacket)
 {	
-	if(pPacket->IsWritecbCheckCode()) //是否已经加密过
-		return 0;
+	if(pPacket->IsWritecbCheckCode()) return 0;
+
 	BYTE *pcbDataBuffer = (BYTE *)pPacket->packet_buf() + NETOutputPacket::PACKET_HEADER_SIZE;
-	WORD wDataSize = pPacket->GetBodyLength()-7;
+	WORD wDataSize = pPacket->GetBodyLength() - 7;
 
 	//效验码与字节映射
 	BYTE cbCheckCode=0;

@@ -125,7 +125,7 @@ int CHelperUnit::connect (void)
 	{
 		if (netfd < 0) // 这里判断是否连接存在
 		{
-			ret = CNet::tcp_connect(&netfd,addr.c_str(), port, 0, TGlobal::_timerConnect);
+			ret = CNet::tcp_connect(&netfd, addr.c_str(), port, 0, TGlobal::_timerConnect);
 		}
 		else
 		{
@@ -214,8 +214,7 @@ int CHelperUnit::recv_from_cgi(void)
 {
 	int ret = ::recv (netfd, _curRecvBuf, MAX_HELPER_RECV_BUF, 0);	
 	log_error("*STEP: recv from logic server fd[%d] recv len[%d] this time", netfd, ret);	
-	if (-1 == ret)
-	{
+	if (-1 == ret) {
 		log_debug("*STEP: ret = -1");		
 		if((errno == EINTR) || (errno == EAGAIN) || (errno == EINPROGRESS))
 		{
@@ -227,8 +226,7 @@ int CHelperUnit::recv_from_cgi(void)
 		return -1;
 	}
 
-	if (0 == ret)
-	{
+	if (0 == ret) {
 		_stage = CONN_DISCONNECT;
 		log_debug ("*STEP:logic server close, unix fd[%d]", netfd);
 		return -1;
@@ -279,7 +277,10 @@ void CHelperUnit::TimerNotify (void)
 void CHelperUnit::update_timer(void)
 {
 	DisableTimer();
-	AttachTimer(_helperTimer);
+
+	if (_helperTimer) {
+		AttachTimer(_helperTimer); 
+	}
 }
 
 int CHelperUnit::append_pkg(const char* buf, unsigned int len)
@@ -323,7 +324,7 @@ int CHelperUnit::process_pkg(void)
 
 		NETInputPacket tranPacket;
 		tranPacket.Copy(_r.data(), pkglen);
-		int nCmd = tranPacket.GetCmdType();
+		unsigned short nCmd = tranPacket.GetCmdType();
 		ed.DecryptBuffer(&tranPacket); /* 瑙ｇ爜 */
 
 		if(_helperpool == NULL) {
@@ -342,7 +343,7 @@ int CHelperUnit::process_pkg(void)
 					totalLen -= pkglen;
 					break;
 				default:
-					log_error("cmd is invalied.");
+					log_error("cmd:[%X] is invalied.", nCmd);
 					break;
 			}
 		}
@@ -479,6 +480,8 @@ CHelperUnit::_worker_stat_chk(NETInputPacket* pack)
 	int 			len;
 	unsigned int	ctime;
 	  
+	log_debug("-------- _worker_stat_chk begin --------");
+		  
 	cmd = pack->GetCmdType();
 	len = pack->ReadInt();
 	ctime = pack->ReadInt();
@@ -507,6 +510,7 @@ CHelperUnit::_worker_stat_chk(NETInputPacket* pack)
 	g_pDebugLog->logMsg("_n_is_busyed: %s", gSvrSwitch->_n_is_busyed ? "true" : "false");
 	g_pDebugLog->logMsg("--------Server_Stat end--------");
 	
+	log_debug("-------- _worker_stat_chk end --------");
 	return 0;
 }
 
@@ -514,7 +518,7 @@ int
 CHelperUnit::send_to_logic()
 {
 	EnableInput ();
-	if (connect() < 0)
+	if (connect() < 0) 
 	{
 		reset_helper();
 		log_debug("Connect logic server failed!");

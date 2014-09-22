@@ -85,8 +85,7 @@ int CIncoming::open (void)
         return -1;
     }
 
-	
-	_realtimerlist = _timerunit->GetTimerList(60);// ±º‰…ËŒ™1∑÷÷”
+	_realtimerlist = _timerunit->GetTimerList(60);
 	
 	_RealTimer->realTimerlist = _realtimerlist;
 	_RealTimer->AttachTimer(_realtimerlist);
@@ -129,10 +128,11 @@ int CIncoming::open (void)
         return -1;
 	}
 	
-	_LevelCountTimer->SetTimerList(_timerunit->GetTimerList(60*5));
+	/* _LevelCountTimer->SetTimerList(_timerunit->GetTimerList(60*5));
 	_LevelCountTimer->SetHelperTimerList(_helpertimerlist);
 	_LevelCountTimer->StartTimer();
-	_LevelCountTimer->SendGetLevelCount();
+	_LevelCountTimer->SendGetLevelCount(); 
+	*/ 
     return 0;
 
 }
@@ -140,8 +140,7 @@ int CIncoming::open (void)
 int CIncoming::InitHelperUnit() // called by CIncoming::open()  ≥ı ºªØ server.xml
 {
 	map<int, vector<int> >::iterator iter = _helperpool->m_levelmap.begin();
-	for(; iter!=_helperpool->m_levelmap.end(); iter++)
-	{
+	for(; iter!=_helperpool->m_levelmap.end(); iter++) {
 		vector<int>& v = iter->second;
 		v.clear();
 	}
@@ -222,7 +221,7 @@ int CIncoming::InitHelperUnit() // called by CIncoming::open()  ≥ı ºªØ server.xm
 			vector<int>& v = _helperpool->m_levelmap[level];
 			v.push_back(svid);
 
-			this->_active_helper(level, svid);
+			this->_active_helper(level, svid); /* ÊøÄÊ¥ª */
 
 			log_boot("alloc server id:[%d], level:[%d], ip:[%s], port:[%d]", svid, level, ip.c_str(), port);
 		}
@@ -249,7 +248,7 @@ int CIncoming::InitHelperUnit() // called by CIncoming::open()  ≥ı ºªØ server.xm
 		
 		while(markup.FindElem("Cmd")) {
 			int cmd = atoi(markup.GetAttrib("value").c_str());
-			log_boot("cmd:[%d]", cmd);
+			//log_boot("cmd:[%d]", cmd);
 			_helperpool->m_cmdlist.push_back(cmd);
 		}
 		
@@ -260,9 +259,7 @@ int CIncoming::InitHelperUnit() // called by CIncoming::open()  ≥ı ºªØ server.xm
 		}
 	}
 
-//–¬‘ˆip”≥…‰
-	if (!markup.OutOfElem())    
-	{        
+	if (!markup.OutOfElem()) {        
 		log_boot ("OutOfElem [ServerList] failed.");       
 		return -1;    
 	}
@@ -344,8 +341,11 @@ CIncoming::_active_helper(const int _level, const int _svid)
 	NETOutputPacket out;
 	CEncryptDecrypt ed;
 
+
+	log_debug("-------- _active_helper begin --------");
 	switch (_level) {
 		case 1:
+			log_debug("active waiter begin [%d]", _svid);
 			h = _helperpool->m_helpermap[_svid];
 			if (h) {
 				out.Begin(INTER_CMD_WAITER_STAT_REQ);
@@ -355,8 +355,10 @@ CIncoming::_active_helper(const int _level, const int _svid)
 				h->append_pkg(out.packet_buf(), out.packet_size());
 				h->send_to_logic();
 			}
+			log_debug("active waiter end");
 			break; 
 		case 2:
+			log_debug("active notify begin [%d]", _svid);
 			h = _helperpool->m_helpermap[_svid];
 			if (h) {
 				out.Begin(INTER_CMD_NOTIFY_STAT_REQ);
@@ -366,11 +368,13 @@ CIncoming::_active_helper(const int _level, const int _svid)
 				h->append_pkg(out.packet_buf(), out.packet_size());
 				h->send_to_logic();
 			}
+			log_debug("active notify end");
 			break;
 		default:
 			break;
 	}
 
+	log_debug("-------- _active_helper end --------");
 	return 0;
 }
 

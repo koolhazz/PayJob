@@ -24,7 +24,6 @@ CMemPool* _helpMp;
 clib_log* g_pErrorLog;
 clib_log* g_pDebugLog;
 
-
 Watchdog *LogFile = NULL;
 
 
@@ -55,8 +54,8 @@ int CProxyModule::open (int argc, char** argv)
 	_RealTimer = new CRealTimer();
 	assert(_RealTimer != NULL);
 
-	_LevelCountTimer = new CLevelCountTimer();
-	assert(_LevelCountTimer != NULL);
+	//_LevelCountTimer = new CLevelCountTimer();
+	//assert(_LevelCountTimer != NULL);
 
 	gSvrStat = new server_stat_t;
 	assert(gSvrStat != NULL);

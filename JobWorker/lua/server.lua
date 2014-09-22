@@ -4,12 +4,21 @@ local producer 	= require("lua/producer")
 local consumer 	= require("lua/consumer")
 local config 	= require("lua/config")
 local logger 	= require("lua/logger")
+local redis 	= require("lib/redis_ffi")
+local ffi		= require("ffi")
 
 local __END__ 	= logger.__END__
 local __BEGIN__ = logger.__BEGIN__
 local __DEBUG__ = logger.__DEBUG__
 local __INFO__ 	= logger.__INFO__
 local __ERROR__ = logger.__ERROR__
+
+ffi.cdef[[
+	unsigned int sleep(unsigned int seconds);
+	void usleep(unsigned long usec);
+]]
+
+local C = ffi.C
 
 local O = {
 	__pd 		= nil,
@@ -18,6 +27,7 @@ local O = {
 	__cs_cnt 	= 0,
 	__er_cnt 	= 0, 
 }
+
 
 
 local function __init()
@@ -60,20 +70,30 @@ end
 local function __run()
 	__BEGIN__("__run")
 	while true do
-		__DEBUG__("111")
 		local __json = O.__pd:produce()
-		__DEBUG__("222")
 		if __json then
 			O.__pd_cnt = O.__pd_cnt + 1
+			
+			__DEBUG__("JSON: "..__json)
+
+			O.__cs:consume(__json)		
+
+			O.__cs_cnt = O.__cs_cnt + 1
+		else
+			C.sleep(1);
 		end
-
-		__DEBUG__("JSON: "..__json)
-
-		O.__cs:consume(__json)		
-
-		O.__cs_cnt = O.__cs_cnt + 1
 	end
 	__END__("__run")
+end
+
+local function __redis_test()
+	local _rds = redis.RedisFFI:NEW()
+	
+	if _rds:CONNECT("192.168.100.167", 4501) then
+		_rds:SET("chenbo", "11111");
+	end
+	
+	return 0
 end
 
 function start()
@@ -86,8 +106,10 @@ function start()
 	end
 
 	__run()
-
+		
 	__END__("start")
+	
+	return 0
 end
 
 

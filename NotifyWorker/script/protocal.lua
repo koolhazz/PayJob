@@ -86,7 +86,7 @@ function start_report_timer()
 	mytimer.start_timer{ 
 		m_n_second 		= 60,
 		m_t_params 		= {G["g_n_gate_fd"], G["g_t_notify_redis"]},
-		m_f_callback 	= waiter_stat_report
+		m_f_callback 	= notify_stat_report
 	}
 	__END__("start_report_timer")
 end

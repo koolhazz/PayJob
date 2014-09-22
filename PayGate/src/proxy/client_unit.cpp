@@ -613,8 +613,7 @@ int CClientUnit::SendPacketToHelperUnit(CHelperUnit* pHelperUnit, char *pData, i
 	transPacket.End();
 
 	pHelperUnit->append_pkg(transPacket.packet_buf(), transPacket.packet_size());
-	if(pHelperUnit->send_to_logic(_decoderunit->get_helper_timer()) < 0)
-	{
+	if(pHelperUnit->send_to_logic(_decoderunit->get_helper_timer()) < 0) {
 		g_pErrorLog->logMsg("%s||Send to AllocServer failed, ip:[%s], port:[%d], uid:[%d], api:[%d]",
 			__FUNCTION__, pHelperUnit->addr.c_str(), pHelperUnit->port, _uid, _api);
 		return -1;

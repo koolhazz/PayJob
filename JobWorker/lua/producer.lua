@@ -28,11 +28,13 @@ local __response = {}
 local function __get_job(_r, _l)
 	__BEGIN__("__get_job")
 	if _r then
-		__DEBUG__("11111")
 		local __job = _r:LPOP(_l)
-		__DEBUG__("22222")
+		
+		__END__("__get_job")
 		return __job
 	end
+	
+	__END__("__get_job")
 end
 
 function __write_response(ptr, sz, nu, userdata)
@@ -44,7 +46,7 @@ function __write_response(ptr, sz, nu, userdata)
 end
 
 local function __do_job(_c, _s, _j)
-	if _c then
+	if _c and _s and _j then
 		_c:set_url(_s)
 		_c:set_post(1)
 		_c:set_postfields("json=".._j)
@@ -106,20 +108,23 @@ end
 
 function producer:produce()
 	__BEGIN__("producer:produce")
-	__DEBUG__("HOST: "..self.__host)
-	__DEBUG__("PORT: "..self.__port)
-	
 	local __job = __get_job(self.__redis, self.__line)
-	__DEBUG__("1111")
-	local __res = __do_job(self.__curl, self.__service, __job)
-	__DEBUG__("2222")
+	
+	if not job then
+		__END__("producer:produce", 3)
+		return  nil
+	end
+	
 	local _o = json.decode(__job)
-	__DEBUG__("3333")
+	
+	local __res = __do_job(self.__curl, self.__service, __job)
+
 	if __res == 0 then
 		if _o then
 			_o.result = table.concat(__response, nil)
 		end	
-
+		
+		__END__("producer:produce", 1)
 		return json.encode(_o)
 	else
 		__ERROR__("__do_job failed.")
@@ -127,7 +132,8 @@ function producer:produce()
 		if _o then
 			_o.result = ""
 		end
-
+		
+		__END__("producer:produce", 2)
 		return json.encode(_o)
 	end
 end
