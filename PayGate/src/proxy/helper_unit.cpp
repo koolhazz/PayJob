@@ -228,7 +228,8 @@ int CHelperUnit::recv_from_cgi(void)
 
 	if (0 == ret) {
 		_stage = CONN_DISCONNECT;
-		log_debug ("*STEP:logic server close, unix fd[%d]", netfd);
+		log_error("*STEP:logic server close, unix fd[%d]", netfd);
+		reConnect();
 		return -1;
 	}
 		
@@ -313,7 +314,7 @@ int CHelperUnit::process_pkg(void)
 			return -1;
 		}
 		int contenLen = ntohs(pHeader->length);
-		log_error("helper packet body length:[%d], cmd:[%d]", ntohs(pHeader->length), ntohs(pHeader->cmd));
+		log_error("helper packet body length:[%d], cmd:[%#x]", ntohs(pHeader->length), ntohs(pHeader->cmd));
 		if(contenLen < 0 || contenLen > 10*1024)
 		{
 			return -1;
@@ -442,6 +443,7 @@ CHelperUnit::_pay_res(NETInputPacket* pack)
 	NETOutputPacket	out;
 	CEncryptDecrypt	ed;
 
+	log_debug("-------- CHelperUnit::_pay_res begin --------");
 	json = pack->ReadString();
 
 	if (r.parse(json, v)) {
@@ -458,6 +460,7 @@ CHelperUnit::_pay_res(NETInputPacket* pack)
 		out.WriteString("");
 		out.End();
 
+		log_debug("-------- CHelperUnit::_pay_res error --------");
 		ret = -1;
 	}
 
@@ -470,6 +473,7 @@ CHelperUnit::_pay_res(NETInputPacket* pack)
 		ret = c->send();
 	}
 
+	log_debug("-------- CHelperUnit::_pay_res end --------");
 	return ret;
 }
 
@@ -480,11 +484,14 @@ CHelperUnit::_worker_stat_chk(NETInputPacket* pack)
 	int 			len;
 	unsigned int	ctime;
 	  
-	log_debug("-------- _worker_stat_chk begin --------");
+	log_debug("-------- CHelperUnit::_worker_stat_chk begin --------");
+	
 		  
 	cmd = pack->GetCmdType();
 	len = pack->ReadInt();
 	ctime = pack->ReadInt();
+
+	log_debug("Cmd: [0x%x]", cmd);
 
 	switch (cmd) {
 		case INTER_CMD_WAITER_STAT_RES:
@@ -501,16 +508,16 @@ CHelperUnit::_worker_stat_chk(NETInputPacket* pack)
 			break;
 	}
 
-	g_pDebugLog->logMsg("--------Server_Stat begin--------");
+	g_pDebugLog->logMsg("-------- Server_Stat begin --------");
 	g_pDebugLog->logMsg("_w_qlen:  %d", gSvrStat->_w_qlen);
 	g_pDebugLog->logMsg("_w_ctime: %d", gSvrStat->_w_ctime);
 	g_pDebugLog->logMsg("_n_qlen:  %d", gSvrStat->_n_qlen);
 	g_pDebugLog->logMsg("_w_ctime: %d", gSvrStat->_n_ctime);
 	g_pDebugLog->logMsg("_w_is_busyed: %s", gSvrSwitch->_w_is_busyed ? "true" : "false");
 	g_pDebugLog->logMsg("_n_is_busyed: %s", gSvrSwitch->_n_is_busyed ? "true" : "false");
-	g_pDebugLog->logMsg("--------Server_Stat end--------");
+	g_pDebugLog->logMsg("-------- Server_Stat end --------");
 	
-	log_debug("-------- _worker_stat_chk end --------");
+	log_debug("-------- CHelperUnit::_worker_stat_chk end --------");
 	return 0;
 }
 

@@ -191,7 +191,7 @@ function RedisFFI:RPUSH(in_s_key, in_s_value)
 
 	_freeReplyObject(reply)
 
-	return _result
+	return tonumber(_result)
 end
 
 function RedisFFI:LLEN(in_s_key)
@@ -206,7 +206,7 @@ function RedisFFI:LLEN(in_s_key)
 
 	_freeReplyObject(reply)
 
-	return _result
+	return tonumber(_result)
 end
 
 function RedisFFI:EXPIRE(in_s_key, in_s_sec)
@@ -221,7 +221,7 @@ function RedisFFI:EXPIRE(in_s_key, in_s_sec)
 
 	_freeReplyObject(reply)
 
-	return _result
+	return tonumber(_result)
 end
 
 function RedisFFI:DEL(in_s_key)
@@ -236,7 +236,7 @@ function RedisFFI:DEL(in_s_key)
 
 	_freeReplyObject(reply)
 
-	return _result
+	return tonumber(_result)
 end
 
 function RedisFFI:IsAlived() 
@@ -269,7 +269,7 @@ function RedisFFI:EXISTS(in_s_key)
 
 	_freeReplyObject(reply)
 
-	return _result
+	return tonumber(_result)
 end
 
 function RedisFFI:HSET(in_s_name, in_s_key, in_s_value)
@@ -284,7 +284,7 @@ function RedisFFI:HSET(in_s_name, in_s_key, in_s_value)
 
 	_freeReplyObject(_reply)
 
-	return _result
+	return tonumber(_result)
 end
 
 function RedisFFI:HGET(in_s_name, in_s_key)
@@ -314,7 +314,7 @@ function RedisFFI:HINCRBY(in_s_name, in_s_key, in_s_value)
 
 	_freeReplyObject(_reply)
 
-	return _result
+	return tonumber(_result)
 end
 
 function RedisFFI:HGETALL(in_s_name)
@@ -337,7 +337,7 @@ function RedisFFI:PUBLISH(in_s_channel, in_s_message)
 
 	_freeReplyObject(_reply)
 
-	return _result	
+	return tonumber(_result)	
 end
 
 function RedisFFI:SUBSCRIBE(in_s_channel)

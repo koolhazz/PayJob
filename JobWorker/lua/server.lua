@@ -53,7 +53,7 @@ local function __init()
 	if O.__cs then
 		local __cs = O.__cs 
 
-		__cs:set_host(config.REDIS_CONF.m_n_host, config.REDIS_CONF.m_n_port)
+		__cs:set_host(config.REDIS_CONF.m_s_host, config.REDIS_CONF.m_n_port)
 		__cs:set_line(config.LINE_CONF.m_s_c_line..config.LINE_CONF.m_n_c_sid)
 
 		if not __cs:init() then

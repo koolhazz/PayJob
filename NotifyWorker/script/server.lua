@@ -19,10 +19,10 @@ local G 		= _G
 local l_t_timer_map = g_t_timer_map
 
 local function __redis_init()
-	G["g_t_waiter_redis"] = redis.RedisFFI:NEW()
+	G["g_t_notify_redis"] = redis.RedisFFI:NEW()
 
-	if G["g_t_waiter_redis"] then
-		if G["g_t_waiter_redis"]:CONNECT(config.REDIS_CONF.m_s_host, config.REDIS_CONF.m_n_port) then
+	if G["g_t_notify_redis"] then
+		if G["g_t_notify_redis"]:CONNECT(config.REDIS_CONF.m_s_host, config.REDIS_CONF.m_n_port) then
 			__DEBUG__("redis connect success.")
 			return true
 		else

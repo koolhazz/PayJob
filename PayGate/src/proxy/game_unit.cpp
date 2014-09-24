@@ -308,7 +308,7 @@ int CGameUnit::process_pkg(void)
 			return -1;
 		}	
 		int contenLen = ntohs(pHeader->length);
-		log_error("helper packet body length:[%d], cmd:[%d]", ntohs(pHeader->length), ntohs(pHeader->cmd));
+		log_error("helper packet body length:[%d], cmd:[%#x]", ntohs(pHeader->length), ntohs(pHeader->cmd));
 		if(contenLen < 0 || contenLen>10*1024)
 		{
 			log_error("CGameUnit::process_pkg contenLen invalid");

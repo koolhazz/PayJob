@@ -27,6 +27,8 @@ local __response = {}
 
 local function __get_job(_r, _l)
 	__BEGIN__("__get_job")
+	__DEBUG__("LINE: ".._l)
+	
 	if _r then
 		local __job = _r:LPOP(_l)
 		
@@ -46,6 +48,7 @@ function __write_response(ptr, sz, nu, userdata)
 end
 
 local function __do_job(_c, _s, _j)
+	__BEGIN__("__do_job")
 	if _c and _s and _j then
 		_c:set_url(_s)
 		_c:set_post(1)
@@ -57,6 +60,7 @@ local function __do_job(_c, _s, _j)
 		return _res
 	end
 
+	__END__("__do_job")
 	return 0
 end
 
@@ -110,7 +114,7 @@ function producer:produce()
 	__BEGIN__("producer:produce")
 	local __job = __get_job(self.__redis, self.__line)
 	
-	if not job then
+	if not __job then
 		__END__("producer:produce", 3)
 		return  nil
 	end

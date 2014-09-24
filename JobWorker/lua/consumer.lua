@@ -50,16 +50,24 @@ function consumer:set_line(_l)
 	self.__line = _l
 end
 
-function consumer:consum(_j)
+function consumer:consume(_j)
+	__BEGIN__("consumer:consume")
+	__DEBUG__("LINE: "..self.__line)
+
 	if self.__redis then
 		local _res = self.__redis:RPUSH(self.__line, _j)
 
-		if _res == 0 then
+		__DEBUG__("RES: ".._res)
+
+		if _res >= 0 then
 			__DEBUG__("consum success.")
 		else
+			__DEBUG__("ERROR: "..self.__redis:ERROR())
 			__ERROR__("consum failed.")
 		end
 	end	
+
+	__END__("consumer:consume")
 end
 	
 

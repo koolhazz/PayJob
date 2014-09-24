@@ -93,12 +93,16 @@ function waiter_stat_report(_t_params)
 
 	if not _fd then
 		__ERROR__("_fd is nil.")
+
+		start_report_timer()
 		__END__("waiter_stat_report", 1)
 		return 
 	end
 
 	if not _redis then
 		__ERROR__("_redis is nil.")
+
+		start_report_timer()
 		__END__("waiter_stat_report", 2)
 		return 
 	end
@@ -106,6 +110,8 @@ function waiter_stat_report(_t_params)
 	if _redis:IsAlived() then
 		cb_waiter_stat_req_handler(_fd)		
 	end
+
+	start_report_timer() -- 开启定时器
 
 	__END__("waiter_stat_report")
 	return 0

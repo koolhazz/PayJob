@@ -58,17 +58,19 @@ end
 
 function notify_stat_report(_t_params)
 	__BEGIN__("notify_stat_report")
-	local _fd = _t_params[1]
-	local _redis = _t_params[2]
+	local _fd = _t_params[1] or G["g_n_gate_fd"]
+	local _redis = _t_params[2] or G["g_t_notify_redis"]
 
 	if not _fd then
 		__ERROR__("_fd is nil.")
+		start_report_timer()
 		__END__("notify_stat_report", 1)
 		return 
 	end
 
 	if not _redis then
 		__ERROR__("_redis is nil.")
+		start_report_timer()
 		__END__("notify_stat_report", 2)
 		return 
 	end
@@ -77,6 +79,7 @@ function notify_stat_report(_t_params)
 		cb_waiter_stat_req_handler(_fd)		
 	end
 
+	start_report_timer()
 	__END__("notify_stat_report")
 	return 0
 end
@@ -97,24 +100,27 @@ function notify_worker()
 	local _redis = G["g_t_notify_redis"]
 	local _notify_cnt = 10
 	local _queue = G["g_s_notify_queue"]..G["global_command_args"]["s"]
+
+	__DEBUG__("QUEUE: ".._queue)
 	
 	if _redis then
-		if _redis:IsAlived() then
-			for i = 1, _notify_cnt do 
-				local _job = _redis:LPOP(_queue)
+		for i = 1, _notify_cnt do 
+			local _job = _redis:LPOP(_queue)
+			__DEBUG__("JSON: ".._job)
 
-				if _job then
-					packet.write_begin(RES_CMD.RES_PAY)
+			if _job then
 
-					packet.write_int(0)
-					packet.write_string(_job)
+				__DEBUG__("JSON: ".._job)
+				packet.write_begin(RES_CMD.RES_PAY)
 
-					packet.write_end()
+				packet.write_int(0)
+				packet.write_string(_job)
 
-					packet.send_packet(G["g_n_gate_fd"])				
-				end
-			end			
-		end
+				packet.write_end()
+
+				packet.send_packet(G["g_n_gate_fd"])				
+			end
+		end			
 	end
 
 	__END__("notify_worker")
