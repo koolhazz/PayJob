@@ -62,7 +62,6 @@ static int RandomUid()
 //给User发送获取玩家数据的协议
 void CLevelCountTimer::TimerNotify()
 {
-	//随机给一个UserId
 	g_pDebugLog->logMsg("%s||GetUserLevelCount", __FUNCTION__);
 	SendGetLevelCount();
 	StartTimer();

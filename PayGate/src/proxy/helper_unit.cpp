@@ -295,14 +295,14 @@ int CHelperUnit::process_pkg(void)
 	int 			headLen = 0, totalLen = 0, pkglen = 0;
 	CEncryptDecrypt ed;
 
-	g_pDebugLog->logMsg("--------------- CHelperUnit::process_pkg begin --------------");
+	log_debug("--------------- CHelperUnit::process_pkg begin --------------");
 
 	headLen  = sizeof(struct TPkgHeader);
 	totalLen = _r.data_len();
 
-	g_pDebugLog->logMsg("forward packets to headLen [%d]:",headLen);
-	g_pDebugLog->logMsg("forward packets to totalLen [%d]:",totalLen);
-	g_pDebugLog->logMsg("forward packets to the client start headLen[%d],totalLen[%d]", headLen, totalLen);
+	log_debug("forward packets to headLen [%d]:",headLen);
+	log_debug("forward packets to totalLen [%d]:",totalLen);
+	log_debug("forward packets to the client start headLen[%d],totalLen[%d]", headLen, totalLen);
 
 	while (totalLen > 0) {
 		if (totalLen < headLen) break;
@@ -315,8 +315,7 @@ int CHelperUnit::process_pkg(void)
 		}
 		int contenLen = ntohs(pHeader->length);
 		log_error("helper packet body length:[%d], cmd:[%#x]", ntohs(pHeader->length), ntohs(pHeader->cmd));
-		if(contenLen < 0 || contenLen > 10*1024)
-		{
+		if(contenLen < 0 || contenLen > 10*1024) {
 			return -1;
 		}
 
@@ -434,6 +433,7 @@ int
 CHelperUnit::_pay_res(NETInputPacket* pack)
 {
 	int 			ret = 0;
+	int				code = 0;
 	string 			json, result;
 	Reader			r;
 	Value			v;
@@ -444,7 +444,10 @@ CHelperUnit::_pay_res(NETInputPacket* pack)
 	CEncryptDecrypt	ed;
 
 	log_debug("-------- CHelperUnit::_pay_res begin --------");
+	code = pack->ReadByte();
 	json = pack->ReadString();
+	log_debug("ErrCode: %d", code);
+	log_debug("JSON: %s", json.c_str());
 
 	if (r.parse(json, v)) {
 		flow = v["flow"].asUInt64();
@@ -480,7 +483,7 @@ CHelperUnit::_pay_res(NETInputPacket* pack)
 int 
 CHelperUnit::_worker_stat_chk(NETInputPacket* pack)
 {
-	int 			cmd;
+	unsigned short	cmd;
 	int 			len;
 	unsigned int	ctime;
 	  
@@ -491,7 +494,7 @@ CHelperUnit::_worker_stat_chk(NETInputPacket* pack)
 	len = pack->ReadInt();
 	ctime = pack->ReadInt();
 
-	log_debug("Cmd: [0x%x]", cmd);
+	log_debug("Cmd: [%#x]", cmd);
 
 	switch (cmd) {
 		case INTER_CMD_WAITER_STAT_RES:
@@ -508,14 +511,14 @@ CHelperUnit::_worker_stat_chk(NETInputPacket* pack)
 			break;
 	}
 
-	g_pDebugLog->logMsg("-------- Server_Stat begin --------");
-	g_pDebugLog->logMsg("_w_qlen:  %d", gSvrStat->_w_qlen);
-	g_pDebugLog->logMsg("_w_ctime: %d", gSvrStat->_w_ctime);
-	g_pDebugLog->logMsg("_n_qlen:  %d", gSvrStat->_n_qlen);
-	g_pDebugLog->logMsg("_w_ctime: %d", gSvrStat->_n_ctime);
-	g_pDebugLog->logMsg("_w_is_busyed: %s", gSvrSwitch->_w_is_busyed ? "true" : "false");
-	g_pDebugLog->logMsg("_n_is_busyed: %s", gSvrSwitch->_n_is_busyed ? "true" : "false");
-	g_pDebugLog->logMsg("-------- Server_Stat end --------");
+	log_info("-------- Server_Stat begin --------");
+	log_info("_w_qlen:  %d", gSvrStat->_w_qlen);
+	log_info("_w_ctime: %d", gSvrStat->_w_ctime);
+	log_info("_n_qlen:  %d", gSvrStat->_n_qlen);
+	log_info("_w_ctime: %d", gSvrStat->_n_ctime);
+	log_info("_w_is_busyed: %s", gSvrSwitch->_w_is_busyed ? "true" : "false");
+	log_info("_n_is_busyed: %s", gSvrSwitch->_n_is_busyed ? "true" : "false");
+	log_info("-------- Server_Stat end --------");
 	
 	log_debug("-------- CHelperUnit::_worker_stat_chk end --------");
 	return 0;

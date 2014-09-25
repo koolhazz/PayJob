@@ -298,15 +298,13 @@ void CPollerUnit::ProcessPollerEvents(void)
 
 		p->newEvents = p->oldEvents;
 
-        if(ep_events[i].events & (EPOLLHUP | EPOLLERR))
-		{
+        if(ep_events[i].events & (EPOLLHUP | EPOLLERR)) {
             log_debug ("EPOLLHUP | EPOLLERR netfd[%d]", p->netfd);
 			p->HangupNotify();
 			continue;
 		}
 
-		if(ep_events[i].events & EPOLLIN)
-        {
+		if(ep_events[i].events & EPOLLIN) {
             log_debug ("EPOLLIN netfd[%d]", p->netfd);
 			ret_code = p->InputNotify();
 			log_debug ("ret_code [%d]", ret_code);
@@ -329,16 +327,10 @@ void CPollerUnit::ProcessPollerEvents(void)
 			ret_code = p->OutputNotify();
 
             //因为在OutputNotify里面已经删除了自己，所以这里必须判断是否已经detach
-            if (s->poller != p)
-            {
-                continue;
-            }
+            if (s->poller != p) continue;
 
             //再次检测返回值，如果不等于POLLER_SUCC，则表示已经delete掉自己，或者异常
-            if (ret_code != POLLER_SUCC)
-            {
-                continue;
-            }
+            if (ret_code != POLLER_SUCC) continue;
         }
 
         //因为在InputNotify, OutputNotify退出后，已经检测指针是否已经detach，因此这里无需判断

@@ -29,6 +29,7 @@ protocal_define_table = {
 }
 
 function cb_notify_stat_req_handler(_n_fd)
+	__BEGIN__("cb_notify_stat_req_handler")
 	if not G["g_n_gate_fd"] then
 		G["g_n_gate_fd"] = _n_fd
 	end
@@ -37,7 +38,7 @@ function cb_notify_stat_req_handler(_n_fd)
 
 	if G["g_t_notify_redis"] then
 		local __queue = G["g_s_notify_queue"]..G["global_command_args"]["s"]
-		_q_len = G["g_t_waiter_redis"]:LLEN(__queue)	
+		_q_len = G["g_t_notify_redis"]:LLEN(__queue)	
 	end
 
 	packet.write_begin(RES_CMD.RES_NOTIFY_STAT)
@@ -53,6 +54,7 @@ function cb_notify_stat_req_handler(_n_fd)
 		__ERROR__("send failed.")
 	end
 
+	__END__("cb_notify_stat_req_handler")
 	return 0
 end
 
@@ -76,7 +78,7 @@ function notify_stat_report(_t_params)
 	end
 
 	if _redis:IsAlived() then
-		cb_waiter_stat_req_handler(_fd)		
+		cb_notify_stat_req_handler(_fd)		
 	end
 
 	start_report_timer()
@@ -106,19 +108,18 @@ function notify_worker()
 	if _redis then
 		for i = 1, _notify_cnt do 
 			local _job = _redis:LPOP(_queue)
-			__DEBUG__("JSON: ".._job)
 
 			if _job then
 
 				__DEBUG__("JSON: ".._job)
 				packet.write_begin(RES_CMD.RES_PAY)
 
-				packet.write_int(0)
+				packet.write_byte(0)
 				packet.write_string(_job)
 
 				packet.write_end()
 
-				packet.send_packet(G["g_n_gate_fd"])				
+				__DEBUG__("slen: "..packet.send_packet(G["g_n_gate_fd"]))				
 			end
 		end			
 	end

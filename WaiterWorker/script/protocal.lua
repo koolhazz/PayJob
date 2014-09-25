@@ -120,7 +120,7 @@ end
 function start_report_timer()
 	__BEGIN__("start_report_timer")
 	mytimer.start_timer{ 
-		m_n_second 		= 60,
+		m_n_second 		= 5,
 		m_t_params 		= {G["g_n_gate_fd"], G["g_t_waiter_redis"]},
 		m_f_callback 	= waiter_stat_report
 	}

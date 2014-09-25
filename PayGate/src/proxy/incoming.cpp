@@ -342,7 +342,7 @@ CIncoming::_active_helper(const int _level, const int _svid)
 	CEncryptDecrypt ed;
 
 
-	log_debug("-------- _active_helper begin --------");
+	log_debug("-------- CIncoming::_active_helper begin --------");
 	switch (_level) {
 		case 1:
 			log_debug("active waiter begin [%d]", _svid);
@@ -374,7 +374,7 @@ CIncoming::_active_helper(const int _level, const int _svid)
 			break;
 	}
 
-	log_debug("-------- _active_helper end --------");
+	log_debug("-------- CIncoming::_active_helper end --------");
 	return 0;
 }
 
