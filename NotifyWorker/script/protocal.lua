@@ -63,6 +63,8 @@ function notify_stat_report(_t_params)
 	local _fd = _t_params[1] or G["g_n_gate_fd"]
 	local _redis = _t_params[2] or G["g_t_notify_redis"]
 
+	stop_report_timer(G["g_n_rpt_timer_id"])
+
 	if not _fd then
 		__ERROR__("_fd is nil.")
 		start_report_timer()
@@ -88,12 +90,18 @@ end
 
 function start_report_timer()
 	__BEGIN__("start_report_timer")
-	mytimer.start_timer{ 
-		m_n_second 		= 60,
-		m_t_params 		= {G["g_n_gate_fd"], G["g_t_notify_redis"]},
-		m_f_callback 	= notify_stat_report
-	}
+	G["g_n_rpt_timer_id"] = mytimer.start_timer{ 
+								m_n_second 		= 60,
+								m_t_params 		= {G["g_n_gate_fd"], G["g_t_notify_redis"]},
+								m_f_callback 	= notify_stat_report
+							}
 	__END__("start_report_timer")
+end
+
+function stop_report_timer(_n_timer_id)
+	if _n_timer_id then
+		mytimer.stop_timer(_n_timer_id)
+	end
 end
 
 function notify_worker()

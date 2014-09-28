@@ -91,12 +91,14 @@ function waiter_stat_report(_t_params)
 	local _fd = _t_params[1] or G["g_n_gate_fd"]
 	local _redis = _t_params[2] or G["g_t_waiter_redis"]
 
+	stop_report_timer(G["g_n_rpt_timer_id"])
+
 	if not _fd then
 		__ERROR__("_fd is nil.")
 
 		start_report_timer()
 		__END__("waiter_stat_report", 1)
-		return 
+		return 0
 	end
 
 	if not _redis then
@@ -104,11 +106,11 @@ function waiter_stat_report(_t_params)
 
 		start_report_timer()
 		__END__("waiter_stat_report", 2)
-		return 
+		return 0
 	end
 
 	if _redis:IsAlived() then
-		cb_waiter_stat_req_handler(_fd)		
+		-- cb_waiter_stat_req_handler(_fd)		
 	end
 
 	start_report_timer() -- 开启定时器
@@ -119,12 +121,19 @@ end
 
 function start_report_timer()
 	__BEGIN__("start_report_timer")
-	mytimer.start_timer{ 
-		m_n_second 		= 5,
-		m_t_params 		= {G["g_n_gate_fd"], G["g_t_waiter_redis"]},
-		m_f_callback 	= waiter_stat_report
-	}
+	G["g_n_rpt_timer_id"] = mytimer.start_timer{ 
+								m_n_second 		= 5,
+								m_t_params 		= {G["g_n_gate_fd"], G["g_t_waiter_redis"]},
+								m_f_callback 	= waiter_stat_report
+							}
+
 	__END__("start_report_timer")
+end
+
+function stop_report_timer(_n_timer_id)
+	if _n_timer_id then
+		mytimer.stop_timer(_n_timer_id)
+	end
 end
 
 function notify_worker()

@@ -15,3 +15,5 @@ g_flag_log_level 		= 3
 g_s_waiter_queue 		= "WaiterQ_"
 
 g_t_timer_map 			= {}
+
+g_n_rpt_timer_id 		= nil
