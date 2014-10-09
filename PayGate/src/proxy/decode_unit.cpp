@@ -16,11 +16,11 @@
 #include <timestamp.h>
 #include <CHelper_pool.h>
 #include <sstream>
+#include <limits.h>
 #include "ICHAT_PacketBase.h"
 
 #include "watchdog.h"
 extern Watchdog *LogFile;
-
 
 #include "clib_log.h"
 extern clib_log* g_pDebugLog;
@@ -28,9 +28,13 @@ extern clib_log* g_pErrorLog;
 
 unsigned long g_iFlow;
 
+#define __ADD__(v, c) __sync_add_and_fetch(&v, c)
+#define __FLOW__() g_iFlow == ULLONG_MAX ? 1 : __ADD__(g_iFlow, 1)
+
 HTTP_SVR_NS_BEGIN
 
-void HexDumpImp0(const void *pdata, unsigned int len, int num)
+void 
+HexDumpImp0(const void *pdata, unsigned int len, int num)
 {
 	if(pdata == 0 || len == 0)
 		return;
@@ -53,27 +57,22 @@ void HexDumpImp0(const void *pdata, unsigned int len, int num)
 		if(len <= rpos)
 			break;
 
-		if(len >= rpos + 16)
-		{
+		if(len >= rpos + 16) {
 			memcpy(buffer, data + rpos, 16);
 			rpos += 16;
 			cnt   = 16;
-		}
-		else
-		{
+		} else {
 			memcpy(buffer, data + rpos, len - rpos);
 			cnt  = len - rpos;
 			rpos = len;
 		}
 
-		if(cnt <= 0)
-			return;
+		if(cnt <= 0) return;
 
 		cout << setw(7) << ( int ) rpos << "  ";
 
 		cnt2 = 0;
-		for ( n = 0; n < 16; n++ )
-		{
+		for ( n = 0; n < 16; n++ ) {
 			cnt2 = cnt2 + 1;
 			if ( cnt2 <= cnt )
 				cout << hex << setw(2) << setfill ( '0' ) <<  (unsigned int)buffer[n];
@@ -87,11 +86,9 @@ void HexDumpImp0(const void *pdata, unsigned int len, int num)
 		cout << " ";
 
 		cnt2 = 0;
-		for ( n = 0; n < 16; n++ )
-		{
+		for ( n = 0; n < 16; n++ ) {
 			cnt2 = cnt2 + 1;
-			if ( cnt2 <= cnt )
-			{
+			if ( cnt2 <= cnt ) {
 				if ( buffer[n] < 32 || 126 < buffer[n] )
 					cout << '.';
 				else
@@ -142,16 +139,14 @@ CDecoderUnit::~CDecoderUnit (void)
 
 int CDecoderUnit::listener_input (void) // called by CListener::proc_request 
 {
-	NEW (CClientUnit(this, _fd, ++g_iFlow), _webUnit);
-	if (NULL == _webUnit)
-	{
+	NEW(CClientUnit(this, _fd, __FLOW__()), _webUnit);
+	if (NULL == _webUnit) {
 		log_error ("create CClient object failed, errno[%d], %m", errno);
 		return -1;
 	}
 
 	NEW(CGameUnit(this), _gameUnit);
-	if(NULL == _gameUnit)
-	{
+	if(NULL == _gameUnit) {
 		log_error ("create helper object failed, errno[%d], %m", errno);
 		return -1;
 	}

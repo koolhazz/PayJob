@@ -122,8 +122,7 @@ int CIncoming::open (void)
     }
 	
 	//init hall connect logic server
-	if(InitHelperUnit() < 0)
-	{
+	if(InitHelperUnit() < 0) {
 		log_boot ("InitHelperUnit failed.");
         return -1;
 	}
@@ -148,20 +147,17 @@ int CIncoming::InitHelperUnit() // called by CIncoming::open()  初始化 server.xm
 	_helperpool->m_svidlist.clear();
 	
 	CMarkupSTL  markup;
-    if(!markup.Load("../conf/server.xml"))
-    {       
+    if(!markup.Load("../conf/server.xml")) {       
         log_boot("Load server.xml failed.");
         return -1;
     }
 
-    if(!markup.FindElem("SYSTEM"))
-    {
+    if(!markup.FindElem("SYSTEM")) {
         log_boot("Can not FindElem [SYSTEM] in server.xml failed.");
         return -1;
     }
 
-	if (!markup.IntoElem())    
-	{        
+	if (!markup.IntoElem()) {        
 		log_boot ("IntoElem [SYSTEM] failed.");       
 		return -1;    
 	}
@@ -319,16 +315,14 @@ int CIncoming::InitHelperUnit() // called by CIncoming::open()  初始化 server.xm
 	return 0;
 }
 
-
-int CIncoming::run (void)
+int CIncoming::run(void)
 {
-    while(!(*(TGlobal::_module_close)))
-    {
+    while(!(*(TGlobal::_module_close))) {
         _pollerunit->WaitPollerEvents (_timerunit->ExpireMicroSeconds(_epwaittimeout));
         uint64_t now = GET_TIMESTAMP();
         _pollerunit->ProcessPollerEvents();
-        _timerunit->CheckExpired (now);
-        _timerunit->CheckPending ();
+        _timerunit->CheckExpired(now);
+        _timerunit->CheckPending();
     }
 
     return 0;
